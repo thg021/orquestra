@@ -194,11 +194,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] O teste passa com o esquema atual
-- [ ] Criar tabela com `tenant_id` sem policy faz o teste falhar citando o nome da tabela
-- [ ] A mensagem de falha lista todas as tabelas descobertas, não apenas a primeira
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 1 teste de integração passa (sem exclusão silenciosa)
+- [x] O teste passa com o esquema atual
+- [x] Criar tabela com `tenant_id` sem policy faz o teste falhar citando o nome da tabela
+- [x] A mensagem de falha lista todas as tabelas descobertas, não apenas a primeira
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 1 teste de integração passa (sem exclusão silenciosa)
 
 **Tests:** integration · **Gate:** full
 **Verify:** acrescentar tabela de teste sem policy numa migração temporária e confirmar a falha nominal.

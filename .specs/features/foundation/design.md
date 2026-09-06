@@ -146,6 +146,8 @@ sessions    (id pk, user_id fk, token_hash unique, tenant_id,
 
 **Tabelas globais vs. de tenant.** `users` e `sessions` são globais: precisam ser legíveis *antes* de existir contexto de tenant — é a autenticação que produz o contexto. `tenants` e `memberships` também são consultadas antes do contexto e ficam fora de RLS; ambas contêm apenas identificadores e papel, nenhum dado de negócio. A convenção normativa é: **tabela que carrega coluna `tenant_id` e dado de negócio tem RLS obrigatória**. Todas as tabelas dos M1 a M4 caem nessa categoria.
 
+`memberships` e `sessions` carregam uma coluna `tenant_id` mas são as exceções deliberadas à convenção — não guardam dado de negócio, e precisam ser lidas antes do contexto existir. O teste de introspecção (RLS-01/RLS-06) não pode simplesmente gatilhar pela presença da coluna `tenant_id`; ele mantém uma isenção nomeada e restrita a essas duas tabelas, documentada no próprio teste. Qualquer tabela nova fora dessa lista com coluna `tenant_id` é obrigada a ter RLS completa.
+
 **Token de sessão:** o valor no cookie é aleatório de 256 bits; o banco guarda apenas o seu SHA-256. Vazamento da tabela não permite forjar sessão. Adulteração do cookie simplesmente não encontra linha (edge case coberto).
 
 **Tabela de prova de RLS.** Para que o gate de segurança do M0 teste RLS de verdade sem esperar o M1, o esquema inclui `service_records` já no formato final do design (`tenant_id`, `service_instance_id`, `collection`, `key`, `data jsonb`), com `service_instance_id` ainda sem FK. Ela é o corpo de prova dos testes de isolamento e nasce como a primeira tabela sob a convenção — em vez de uma tabela descartável só para teste.
