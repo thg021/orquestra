@@ -76,11 +76,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `pnpm install` resolve os cinco workspaces
-- [ ] Scripts `lint`, `typecheck`, `test:unit`, `test:int`, `test:e2e`, `test`, `check`, `build` existem na raiz
-- [ ] Regra de lint proíbe `apps/**` importar de `packages/*/src/**` por caminho relativo, e proíbe `packages/{core,db}` importarem `@nestjs/*`
-- [ ] `pnpm check` retorna zero em repositório vazio e diferente de zero se qualquer etapa falhar
-- [ ] Gate check passa: `pnpm build`
+- [x] `pnpm install` resolve os cinco workspaces
+- [x] Scripts `lint`, `typecheck`, `test:unit`, `test:int`, `test:e2e`, `test`, `check`, `build` existem na raiz
+- [x] Regra de lint proíbe `apps/**` importar de `packages/*/src/**` por caminho relativo, e proíbe `packages/{core,db}` importarem `@nestjs/*`
+- [x] `pnpm check` retorna zero em repositório vazio e diferente de zero se qualquer etapa falhar
+- [x] Gate check passa: `pnpm build`
 
 **Tests:** none · **Gate:** build
 **Verify:** `pnpm check; echo $?` → `0`. Introduzir erro de tipo proposital e confirmar saída diferente de zero.
@@ -99,11 +99,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `docker compose up -d postgres redis` deixa o Postgres com healthcheck saudável
-- [ ] `orquestra_app` não tem privilégio de DDL nem `BYPASSRLS`; `orquestra_owner` tem DDL
-- [ ] `.env.example` lista todas as variáveis, sem valor real, incluindo `DATABASE_URL` e `DATABASE_MIGRATION_URL` apontando para papéis distintos
-- [ ] `.env` está no `.gitignore`
-- [ ] Gate check passa: `pnpm build`
+- [x] `docker compose up -d postgres redis` deixa o Postgres com healthcheck saudável
+- [x] `orquestra_app` não tem privilégio de DDL nem `BYPASSRLS`; `orquestra_owner` tem DDL
+- [x] `.env.example` lista todas as variáveis, sem valor real, incluindo `DATABASE_URL` e `DATABASE_MIGRATION_URL` apontando para papéis distintos
+- [x] `.env` está no `.gitignore`
+- [x] Gate check passa: `pnpm build`
 
 **Tests:** none · **Gate:** build
 **Verify:** conectar como `orquestra_app` e confirmar que `create table t(x int)` é recusado.
@@ -122,12 +122,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: `context7` (API do drizzle-kit) · Skill: NENHUMA
 
 **Done when:**
-- [ ] As quatro tabelas nascem com PK UUID, `created_at`, e `users.email` como `citext` único
-- [ ] Migração aplicada duas vezes seguidas não reaplica (registro em `drizzle.__drizzle_migrations`)
-- [ ] Migração que falha no meio deixa o banco no estado anterior a ela
-- [ ] Duas execuções concorrentes de `runMigrations()` serializam pelo advisory lock, aplicando cada migração uma vez
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 5 testes de integração passam (sem exclusão silenciosa)
+- [x] As quatro tabelas nascem com PK UUID, `created_at`, e `users.email` como `citext` único
+- [x] Migração aplicada duas vezes seguidas não reaplica (registro em `drizzle.__drizzle_migrations`)
+- [x] Migração que falha no meio deixa o banco no estado anterior a ela
+- [x] Duas execuções concorrentes de `runMigrations()` serializam pelo advisory lock, aplicando cada migração uma vez
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 5 testes de integração passam (sem exclusão silenciosa)
 
 **Tests:** integration · **Gate:** full
 **Verify:** contra banco vazio do Testcontainers, aplicar migrações e conferir as quatro tabelas em `information_schema`.
@@ -146,12 +146,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `withTenant` estabelece o setting no escopo da transação e o commit encerra o contexto
-- [ ] `getTenantId()` lança quando chamado fora de `withTenant`
-- [ ] Com pool de `max: 1`, operações alternando tenant A e B não vazam contexto entre transações
-- [ ] O pool não é exportado no `index.ts` do pacote; o único acesso público é `withTenant`/`withoutTenant`
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 4 testes de integração passam (sem exclusão silenciosa)
+- [x] `withTenant` estabelece o setting no escopo da transação e o commit encerra o contexto
+- [x] `getTenantId()` lança quando chamado fora de `withTenant`
+- [x] Com pool de `max: 1`, operações alternando tenant A e B não vazam contexto entre transações
+- [x] O pool não é exportado no `index.ts` do pacote; o único acesso público é `withTenant`/`withoutTenant`
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 5 testes de integração passam (sem exclusão silenciosa)
 
 **Tests:** integration · **Gate:** full
 **Verify:** teste de pool `max: 1` alternando tenants; sem `SET LOCAL` o teste falha.
