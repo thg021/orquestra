@@ -1,0 +1,15 @@
+{
+  "name": "@orquestra/catalog",
+  "private": true,
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@orquestra/core": "workspace:*",
+    "zod": "^4.5.4"
+  }
+}

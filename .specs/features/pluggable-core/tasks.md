@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Pendente — 0 de 25 tasks
+**Status:** Em andamento — 1 de 25 tasks (T1 concluída em 06/09/2026)
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -70,7 +70,7 @@ T18, T21, T22 ──┬──► T23
 ### T1: Pacote `packages/catalog` com o contrato de extensão
 
 **What:** pacote novo no workspace com `defineAgent`, `defineConnector`, o marcador `secret()` e os tipos de `Capability`, `AgentDefinition` e `ConnectorDefinition`. Sem definições reais ainda.
-**Where:** `packages/catalog/src/{index.ts,types.ts,define.ts,secret.ts}`, `pnpm-workspace.yaml`
+**Where:** `packages/catalog/src/{index.ts,capabilities.ts,define.ts,secret.ts,errors.ts}`
 **Depends on:** —
 **Reuses:** regra de dependência do M0 (`catalog → core`, nunca NestJS)
 **Requirement:** CAT-01, CAT-02
@@ -78,9 +78,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `defineAgent` e `defineConnector` recusam, em tempo de chamada, definição sem chave, sem versão em semver ou sem capability
-- [ ] `secret()` anota o campo sem alterar o tipo inferido pelo Zod
-- [ ] Teste de fronteira confirma que o pacote não importa NestJS nem `packages/db`
+- [x] `defineAgent` e `defineConnector` recusam, em tempo de chamada, definição sem chave, sem versão em semver ou sem capability
+- [x] `secret()` anota o campo sem alterar o tipo inferido pelo Zod
+- [x] Teste de fronteira confirma que o pacote não importa NestJS nem `packages/db`
+
+**Feito em 06/09/2026.** 19 testes. `secret()` virou `.meta({ secret: true })` do Zod 4 — a marca atravessa o `z.toJSONSchema()` e chega ao painel, em vez do `.describe()` estruturado que o design previa. `defineConnector` também recusa conector que não marque nenhum campo secreto.
 
 ---
 
@@ -89,7 +91,7 @@ T18, T21, T22 ──┬──► T23
 **What:** `validateCatalog()` reprovando chave duplicada, versão fora de semver, capability órfã e schema fora do subconjunto do formulário; e a conversão Zod → JSON Schema que o painel consome.
 **Where:** `packages/catalog/src/{validate.ts,json-schema.ts}`
 **Depends on:** T1
-**Reuses:** `zod-to-json-schema`
+**Reuses:** `z.toJSONSchema()` nativo do Zod 4 — sem dependência extra
 **Requirement:** CAT-03, CAT-04
 
 **Tools:** MCP: NENHUM · Skill: NENHUMA
