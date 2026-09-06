@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-05
-**Fase atual:** M0 — Fundação (tasks definidas; próximo: Execute a partir de T1)
+**Fase atual:** M0 — Fundação concluído em 2026-09-06 (23/23 tasks); próximo: iniciar M1 — Núcleo plugável
 
 ## Decisões
 
@@ -40,7 +40,12 @@
 
 ## Lições
 
-_(vazio — preencher conforme a implementação avança)_
+- **NestJS + Vitest: injeção de dependência implícita por tipo não funciona.** O Vitest transpila via esbuild, que não emite `design:paramtypes` (só o `tsc` real emite, via `emitDecoratorMetadata`). Todo construtor de controller/provider precisa de `@Inject(Token)` explícito — nunca só o tipo do parâmetro. Descoberto em T11, virou convenção documentada em `TESTING.md`.
+- **`current_setting(nome, true)` pode devolver `''` em vez de `NULL`** numa conexão que já teve o GUC customizado tocado antes na mesma sessão (mesmo depois do fim da transação que o setou com `is_local`). Como o pool reaproveita conexões, uma policy de RLS que compara direto com `::uuid` pode quebrar em vez de simplesmente filtrar. Corrigido envolvendo em `nullif(current_setting(...), '')::uuid`. Descoberto em T5.
+- **`argon2.hash()` não trata chave com valor `undefined` explícito como "use o default".** Passar `{ memoryCost: options.memoryCost }` quando `options.memoryCost` é `undefined` quebra a validação interna da lib. É preciso omitir a chave inteira, não só deixar o valor `undefined`. Descoberto em T14.
+- **Projetos distintos do Vitest rodam concorrentes por padrão**, mesmo com `fileParallelism: false` (que só serializa arquivos *dentro* de um projeto). Como `integration` e `e2e` sobem Postgres via Testcontainers cada um, isso pode saturar a memória do Docker Desktop. `pnpm test` roda os três projetos em sequência por isso. Descoberto em T17.
+- **`tsx` (esbuild) resolve `tsconfig.json` com `extends` relativo subindo diretórios** — então o Dockerfile precisa copiar `tsconfig.base.json` da raiz, não só o pacote sendo buildado, senão decorators quebram silenciosamente (mesma causa-raiz do primeiro item, manifestada de outro jeito). Descoberto em T23.
+- **Pacotes do workspace com `main` apontando para `./src/index.ts`** (sem build) funcionam bem sob bundler (Vite) e sob runtime com transpilação on-the-fly (tsx), mas quebram sob `node` puro contra `dist/`. A API roda em produção via `tsx` no M0 (ambiente de desenvolvimento é o alvo declarado do milestone); virar isso num build real de produção fica para quando M0 sair de escopo dev.
 
 ## Todos
 

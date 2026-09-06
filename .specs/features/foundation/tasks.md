@@ -3,7 +3,7 @@
 **Design:** `.specs/features/foundation/design.md`
 **Spec:** `.specs/features/foundation/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Draft
+**Status:** Done — as 23 tasks concluídas em 2026-09-06
 
 23 tasks. Uma entrega por task, com teste co-locado.
 
@@ -581,12 +581,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: `playwright` (percurso no navegador) · Skill: NENHUMA
 
 **Done when:**
-- [ ] Em diretório limpo: clonar, copiar `.env.example`, `pnpm dev` e obter resposta de `/health`
-- [ ] Provisionar tenant pelo CLI e autenticar no painel, vendo o nome do tenant
-- [ ] Volume do banco destruído e recriado reconstrói o esquema com as policies
-- [ ] `pnpm check` verde do início ao fim
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: soma das suítes anteriores passa (sem exclusão silenciosa)
+- [x] Em diretório limpo: clonar, copiar `.env.example`, `pnpm dev` e obter resposta de `/health`
+- [x] Provisionar tenant pelo CLI e autenticar no painel, vendo o nome do tenant
+- [x] Volume do banco destruído e recriado reconstrói o esquema com as policies
+- [x] `pnpm check` verde do início ao fim
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: soma das suítes anteriores passa (sem exclusão silenciosa)
 
 **Tests:** e2e · **Gate:** full
 **Commit:** `chore(infra): subida completa do ambiente em um comando`

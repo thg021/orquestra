@@ -6,6 +6,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
+    "start:dev": "tsx src/main.ts",
     "cli": "tsx src/cli/main.ts"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "tsx": "^4.19.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -28,7 +30,6 @@
     "@types/express": "^5.0.0",
     "@types/pg": "^8.11.10",
     "@types/supertest": "^6.0.2",
-    "supertest": "^7.0.0",
-    "tsx": "^4.19.2"
+    "supertest": "^7.0.0"
   }
 }

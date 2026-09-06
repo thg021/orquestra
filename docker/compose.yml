@@ -31,5 +31,39 @@ services:
       timeout: 3s
       retries: 20
 
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://orquestra_app:${ORQUESTRA_APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_MIGRATION_URL: postgres://orquestra_owner:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+      SESSION_SECRET: ${SESSION_SECRET}
+      API_PORT: ${API_PORT:-3000}
+      PROCESS_ROLE: api
+    ports:
+      - "${API_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    environment:
+      # Nome do serviço na rede interna do compose — o default do vite.config.ts
+      # (localhost:3000) só serve pra rodar o web fora do Docker.
+      VITE_API_PROXY_TARGET: http://api:3000
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    depends_on:
+      - api
+
 volumes:
   postgres-data:
