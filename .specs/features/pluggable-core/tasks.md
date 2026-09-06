@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 11 de 25 tasks (T1 a T11 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 12 de 25 tasks (T1 a T12 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -300,9 +300,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Sem I/O algum — testável sem banco e sem NestJS
-- [ ] Matriz coberta: obrigatória faltando, opcional faltando, config inválida, conexão revogada, versão ausente, caminho feliz
-- [ ] Cada impedimento carrega código e os dados para a mensagem (quais capabilities, quais campos)
+- [x] Sem I/O algum — testável sem banco e sem NestJS
+- [x] Matriz coberta: obrigatória faltando, opcional faltando, config inválida, conexão revogada, versão ausente, caminho feliz
+- [x] Cada impedimento carrega código e os dados para a mensagem (quais capabilities, quais campos)
+
+**Feito em 06/09/2026.** `evaluateActivation()` em `packages/core/src/activation-gate.ts` — recebe dados já resolvidos (não tipos de `catalog`/`db`), justamente para não criar dependência circular (`catalog → core`, nunca o inverso). `AGENT_VERSION_MISSING` é o único impedimento que encerra a avaliação sozinho: sem a definição do agente não há capability exigida nem schema pra validar. Os outros três impedimentos acumulam — uma instância pode estar com config inválida E capability sem vínculo E conexão revogada ao mesmo tempo, e o teste prova os três juntos numa avaliação só. 8 testes, zero I/O.
 
 ---
 
