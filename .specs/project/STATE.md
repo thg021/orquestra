@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 7/25 tasks (T1 a T7 concluídas em 2026-09-06) — US1 fechada
+**Fase atual:** M1 — Núcleo plugável em execução; 8/25 tasks (T1 a T7, T9 concluídas em 2026-09-06) — US1 fechada
 
 ## Decisões
 
@@ -35,6 +35,7 @@
 | D32 | 2026-09-06 | Canal de contato de `customers` reaproveita o vocabulário de capability de saída (`email`/`messaging`/`document-delivery`) em vez de um enum próprio | T3 |
 | D33 | 2026-09-06 | KEK montada como diretório de Docker secrets (um arquivo por versão, nome = número da versão) em vez de uma variável só — é o que sustenta múltiplas versões coexistindo (ROT-04/D24) | T5 |
 | D34 | 2026-09-06 | AAD do envelope da DEK inclui a versão de KEK; AAD do envelope do segredo não inclui — a DEK nunca muda numa rotação de KEK, então seu AAD não pode depender de uma versão que muda sem ela. Refina o design §Cofre, que descrevia um único AAD uniforme. | T6 |
+| D35 | 2026-09-06 | Índice único parcial (`where removed_at is null`) em `service_instances(tenant_id, name)` — nome de instância removida fica livre para reuso, sem exigir troca de nome | T9 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |
@@ -60,6 +61,8 @@
 - **`argon2.hash()` não trata chave com valor `undefined` explícito como "use o default".** Passar `{ memoryCost: options.memoryCost }` quando `options.memoryCost` é `undefined` quebra a validação interna da lib. É preciso omitir a chave inteira, não só deixar o valor `undefined`. Descoberto em T14.
 - **Projetos distintos do Vitest rodam concorrentes por padrão**, mesmo com `fileParallelism: false` (que só serializa arquivos *dentro* de um projeto). Como `integration` e `e2e` sobem Postgres via Testcontainers cada um, isso pode saturar a memória do Docker Desktop. `pnpm test` roda os três projetos em sequência por isso. Descoberto em T17.
 - **Docker Compose cacheia o objeto de secret no daemon quando usa driver `file:`.** Trocar o conteúdo do arquivo host depois que o container já foi criado não atualiza o secret montado — nem `up -d` nem `--force-recreate` bastam. É preciso `docker compose down` (remove os secrets) antes de subir de novo. Descoberto testando a T5 ao vivo.
+- **`drizzle-kit` 0.28 não gera `FORCE ROW LEVEL SECURITY`** — só `ENABLE`. Toda tabela nova sob RLS precisa da linha `ALTER TABLE ... FORCE ROW LEVEL SECURITY;` acrescentada à mão na migração gerada, senão o teste de introspecção reprova nomeando a tabela. Confirmado de novo na T9 (já era conhecido do M0, T9 do M0).
+- **Teste que conta "o total de X no banco inteiro" quebra quando o schema cresce de forma legítima.** `migrate.int.test.ts` contava todas as foreign keys do banco esperando um número fixo; a chegada de `connector_bindings` (com FK de verdade) quebrou um teste que não tinha nada a ver com ela. Corrigido restringindo a query às tabelas que o teste queria provar. Lição: teste de contagem global é frágil — prefira escopar ao que o teste realmente afirma. Descoberto na T9.
 - **Zod 4 valida UUID pela RFC de verdade.** O fixture `11111111-1111-1111-1111-111111111111` passava no Zod 3 e é recusado no Zod 4: o nibble de versão e o de variante não batem com a RFC 9562. IDs reais (v7, do `newId`) passam normalmente — o teste é que estava frouxo. Ao escrever fixture de UUID, use um v7 de verdade. Descoberto na migração da T1.
 - **`import.meta` não compila sob o `module: CommonJS` do projeto.** Teste que precisa do próprio caminho resolve a partir de `process.cwd()` (o Vitest roda da raiz do monorepo). Descoberto na T1.
 - **`tsx` (esbuild) resolve `tsconfig.json` com `extends` relativo subindo diretórios** — então o Dockerfile precisa copiar `tsconfig.base.json` da raiz, não só o pacote sendo buildado, senão decorators quebram silenciosamente (mesma causa-raiz do primeiro item, manifestada de outro jeito). Descoberto em T23.

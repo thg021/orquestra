@@ -15,6 +15,13 @@
       "when": 1788662770985,
       "tag": "0001_striped_mystique",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788729250214,
+      "tag": "0002_icy_living_tribunal",
+      "breakpoints": true
     }
   ]
 }

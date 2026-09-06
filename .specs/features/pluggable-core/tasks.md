@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 7 de 25 tasks (T1 a T7 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 8 de 25 tasks (T1 a T7, T9 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -235,9 +235,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] O teste de introspecção de RLS do M0 passa a cobrir as três tabelas sem alteração no próprio teste
-- [ ] Segredo e DEK são `bytea`; `key_version` é coluna própria e consultável
-- [ ] Única por `(service_instance_id, capability)` impede dois vínculos na mesma capability
+- [x] O teste de introspecção de RLS do M0 passa a cobrir as três tabelas sem alteração no próprio teste
+- [x] Segredo e DEK são `bytea`; `key_version` é coluna própria e consultável
+- [x] Única por `(service_instance_id, capability)` impede dois vínculos na mesma capability
+
+**Feito em 06/09/2026.** Migração `0002_icy_living_tribunal.sql` gerada por `drizzle-kit generate` e validada de ponta a ponta num Postgres real antes de commitar (não só pelo teste). O `drizzle-kit` 0.28 não gera `FORCE ROW LEVEL SECURITY` — acrescentado à mão nas três tabelas, mesma lacuna já conhecida do M0. Um teste do M0 (`migrate.int.test.ts`) contava o total de FKs do banco inteiro e quebrou com a chegada de `connector_bindings` (que legitimamente tem FK); corrigido para restringir à checagem que o teste realmente queria provar (FKs de `memberships`/`sessions`), sem perder cobertura. 6 testes de integração novos. Suíte completa verde: lint, typecheck, 152 unitários, 51 integração, 27 e2e.
 
 ---
 
