@@ -9,7 +9,7 @@ describe("runMigrations", () => {
 
   beforeAll(async () => {
     db = await startTestDatabase();
-  }, 120_000);
+  }, 180_000);
 
   afterAll(async () => {
     await db.close();

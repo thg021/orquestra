@@ -16,7 +16,7 @@ describe("auth.service", () => {
     db = await startTestDatabase();
     await runMigrations({ connectionString: db.ownerUrl });
     process.env.DATABASE_URL = db.appUrl;
-  }, 120_000);
+  }, 180_000);
 
   afterAll(async () => {
     await closeDefaultPool();

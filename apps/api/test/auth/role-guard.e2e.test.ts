@@ -61,7 +61,7 @@ describe("RoleGuard / regra do último owner", () => {
     app = await NestFactory.create(TestModule, { logger: false });
     app.use(cookieParser());
     await app.init();
-  }, 120_000);
+  }, 180_000);
 
   afterAll(async () => {
     await app.close();

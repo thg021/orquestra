@@ -28,7 +28,12 @@ export default defineWorkspace([
       // testes de integração tocam Postgres real via Testcontainers; não paralelizam entre arquivos
       // para evitar exaustão de containers na máquina de desenvolvimento.
       fileParallelism: false,
-      passWithNoTests: true
+      passWithNoTests: true,
+      // Muitos arquivos sobem+derrubam container em sequência; em máquina com Docker
+      // Desktop com pouca memória, o start pode atrasar o suficiente para estourar o
+      // hookTimeout padrão (10s) mais adiante numa rodada longa.
+      hookTimeout: 180_000,
+      testTimeout: 60_000
     }
   },
   {
@@ -38,7 +43,9 @@ export default defineWorkspace([
       exclude: ["**/node_modules/**", "**/dist/**"],
       environment: "node",
       fileParallelism: false,
-      passWithNoTests: true
+      passWithNoTests: true,
+      hookTimeout: 180_000,
+      testTimeout: 60_000
     }
   }
 ]);

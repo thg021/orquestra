@@ -52,7 +52,7 @@ describe("bootstrap", () => {
 
       await result.app!.close();
     },
-    120_000
+    180_000
   );
 
   it("variável faltante encerra a inicialização sem tentar conectar ao banco", async () => {

@@ -12,7 +12,7 @@ describe("withTenant / withoutTenant", () => {
   beforeAll(async () => {
     db = await startTestDatabase();
     pool = new Pool({ connectionString: db.appUrl });
-  }, 120_000);
+  }, 180_000);
 
   afterAll(async () => {
     await pool.end();

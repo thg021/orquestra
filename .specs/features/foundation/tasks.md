@@ -488,14 +488,14 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `tenant:create` cria tenant, usuário e membership `owner` numa transação
-- [ ] E-mail já existente (comparado normalizado) vincula o usuário em vez de duplicar
-- [ ] Nome de tenant duplicado recusa com mensagem explícita e não escreve nada
-- [ ] Senha abaixo do mínimo recusa antes de criar qualquer registro
-- [ ] `user:reset-password` substitui o hash e o login seguinte usa a senha nova
-- [ ] A senha não aparece em log nem em saída padrão
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 7 testes de integração passam (sem exclusão silenciosa)
+- [x] `tenant:create` cria tenant, usuário e membership `owner` numa transação
+- [x] E-mail já existente (comparado normalizado) vincula o usuário em vez de duplicar
+- [x] Nome de tenant duplicado recusa com mensagem explícita e não escreve nada
+- [x] Senha abaixo do mínimo recusa antes de criar qualquer registro
+- [x] `user:reset-password` substitui o hash e o login seguinte usa a senha nova
+- [x] A senha não aparece em log nem em saída padrão
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 7 testes de integração passam (sem exclusão silenciosa)
 
 **Tests:** integration · **Gate:** full
 **Commit:** `feat(api): CLI de provisionamento de tenant`

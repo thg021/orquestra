@@ -56,7 +56,7 @@ describe("AuthController", () => {
     const result = await bootstrap(env);
     app = result.app!;
     await app.init();
-  }, 120_000);
+  }, 180_000);
 
   afterAll(async () => {
     await app.close();

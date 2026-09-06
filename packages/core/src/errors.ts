@@ -55,3 +55,9 @@ export class RateLimitedError extends DomainError {
     super("RATE_LIMITED", "Muitas tentativas em pouco tempo.");
   }
 }
+
+export class UserNotFoundError extends DomainError {
+  constructor(email: string) {
+    super("USER_NOT_FOUND", `Usuário com e-mail "${email}" não encontrado.`);
+  }
+}

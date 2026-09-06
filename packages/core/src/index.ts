@@ -11,6 +11,7 @@ export {
   InvalidCredentialsError,
   NoMembershipError,
   InsufficientRoleError,
-  RateLimitedError
+  RateLimitedError,
+  UserNotFoundError
 } from "./errors";
 

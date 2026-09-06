@@ -73,7 +73,7 @@ describe("cobertura de RLS por introspecção", () => {
     await runMigrations({ connectionString: db.ownerUrl });
     client = new Client({ connectionString: db.ownerUrl });
     await client.connect();
-  }, 120_000);
+  }, 180_000);
 
   afterAll(async () => {
     await client.end();
