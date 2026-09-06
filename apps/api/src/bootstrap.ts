@@ -1,5 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
+import cookieParser from "cookie-parser";
 import { runMigrations, type RunMigrationsOptions } from "@orquestra/db";
 import { AppModule } from "./app.module";
 import { loadConfig, type AppConfig } from "./config/load-config";
@@ -70,6 +71,7 @@ export async function bootstrap(
   }
 
   const app = await NestFactory.create(AppModule.register(config), { logger: ["error", "warn"] });
+  app.use(cookieParser());
   app.get(HealthService).markMigrationsApplied();
 
   return { config, app };

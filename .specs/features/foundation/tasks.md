@@ -421,11 +421,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: `context7` (guards e interceptors do NestJS) · Skill: NENHUMA
 
 **Done when:**
-- [ ] Rota protegida sem cookie, com cookie adulterado ou com sessão expirada responde 401 idêntico nos três casos
-- [ ] Usuário sem membership responde 403 com código próprio, distinto do 401
-- [ ] Dentro do handler, `getTenantId()` devolve o tenant do vínculo mais antigo
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 6 testes e2e passam (sem exclusão silenciosa)
+- [x] Rota protegida sem cookie, com cookie adulterado ou com sessão expirada responde 401 idêntico nos três casos
+- [x] Usuário sem membership responde 403 com código próprio, distinto do 401
+- [x] Dentro do handler, `getTenantId()` devolve o tenant do vínculo mais antigo
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 6 testes e2e passam (sem exclusão silenciosa)
 
 **Tests:** e2e · **Gate:** full
 **Commit:** `feat(api): guard de sessão e contexto de tenant por requisição`
