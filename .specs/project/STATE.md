@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-05
-**Fase atual:** M0 — Fundação (planejamento)
+**Fase atual:** M0 — Fundação (tasks definidas; próximo: Execute a partir de T1)
 
 ## Decisões
 
@@ -22,6 +22,12 @@
 | D13 | 2026-09-05 | `file-storage` (entrada) tem três adapters — `onedrive`, `google-drive`, `platform-upload` — e o tenant escolhe um. Nenhum é caminho único. | design §7 |
 | D14 | 2026-09-05 | A saída tem três vias (Fortes Conecta, e-mail, WhatsApp) que coexistem; a escolha é **por destinatário**, resolvida pelo agente a partir do canal em `customers`, não pela configuração da instância. | design §4, §7 |
 | D15 | 2026-09-05 | Capabilities podem ser obrigatórias ou opcionais; um serviço ativa sem os bindings opcionais (ex.: escritório que não usa WhatsApp). | design §4 |
+| D16 | 2026-09-05 | Drizzle ORM + drizzle-kit como camada de dados e migrações — SQL-first mantém RLS e `SET LOCAL` no caminho feliz da ferramenta | M0 design §Decisões técnicas |
+| D17 | 2026-09-05 | React + Vite (SPA) no painel; preserva a fronteira api/web e é o caminho para um app Tauri no Windows depois | M0 design §Decisões técnicas |
+| D18 | 2026-09-05 | Sessão com estado em tabela `sessions` no Postgres, não em Redis — logout é DELETE e há uma só fonte de verdade de identidade | M0 design §Decisões técnicas |
+| D19 | 2026-09-05 | Dois papéis de banco: `orquestra_owner` (DDL, migrações) e `orquestra_app` (DML, `NOBYPASSRLS`), com `FORCE ROW LEVEL SECURITY` nas tabelas de tenant | M0 design §Modelo de dados |
+| D20 | 2026-09-05 | Monorepo em `apps/{api,web}` + `packages/{db,core,contracts}`, com regra de dependência que impede `core`/`db` conhecerem NestJS | M0 design §Estrutura do monorepo |
+| D21 | 2026-09-05 | Vitest como runner único do monorepo e Testcontainers para o Postgres dos testes de RLS; testes `e2e` não rodam em paralelo | `.specs/codebase/TESTING.md` |
 
 ## Bloqueios e riscos abertos
 
@@ -38,7 +44,7 @@ _(vazio — preencher conforme a implementação avança)_
 
 ## Todos
 
-- [ ] Definir a estrutura do monorepo (pacotes e fronteiras) na Fase 0
+- [x] Definir a estrutura do monorepo (pacotes e fronteiras) na Fase 0 — fechado em 2026-09-05 (D20)
 - [ ] Provar a Graph API com a conta pessoal no M3 (não bloqueante — define só qual adapter de `file-storage` o tenant piloto usa)
 - [ ] Levantar a documentação da API do Fortes Conecta ao iniciar o adapter
 - [ ] Extrair as regras de negócio da skill `rotina-contabil` para uma lista de casos de teste antes do M4
