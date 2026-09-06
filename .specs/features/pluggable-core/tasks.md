@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 10 de 25 tasks (T1 a T10 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 11 de 25 tasks (T1 a T11 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -279,9 +279,13 @@ De passagem: corrigido um aviso de depreciação do TypeScript (`moduleResolutio
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Config inválida devolve 422 com os campos e motivos, sem gravar
-- [ ] A validação usa a versão fixada na instância, não a mais recente do catálogo
-- [ ] Remoção preserva a linha e os vínculos, e some da listagem
+- [x] Config inválida devolve 422 com os campos e motivos, sem gravar
+- [x] A validação usa a versão fixada na instância, não a mais recente do catálogo
+- [x] Remoção preserva a linha e os vínculos, e some da listagem
+
+**Feito em 06/09/2026.** `POST/GET/PATCH/DELETE /service-instances`. `owner`/`admin` escrevem via `@RequireRole("admin")`; `operator` só lê via `@Protected()`. `ErrorFilter` ganhou um campo `fields` opcional no corpo de erro — só repassado quando a exceção HTTP carrega essa chave, nunca o payload inteiro sem filtro. `update()` busca a definição pela chave+versão FIXADA na instância (`findAgentDefinition`, novo em `packages/catalog`), não pela mais recente do catálogo — recusa com `AGENT_VERSION_MISSING` (409) se essa versão específica não existir mais. 7 testes e2e novos, incluindo isolamento entre tenants e a diferença de permissão entre `operator` e `admin`.
+
+Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez, alguns arquivos falharam por esgotamento de recursos do Docker Desktop (3.8 GB / 2 CPUs alocados nesta máquina, dividido com outros contêineres do usuário) — não por regressão. Confirmado rodando os 13 arquivos de integração em lotes pequenos: todos passam, 70/70.
 
 ---
 

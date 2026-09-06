@@ -2,9 +2,15 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logge
 import type { Response } from "express";
 import { DomainError } from "@orquestra/core";
 
+export interface FieldError {
+  path: string;
+  message: string;
+}
+
 interface ErrorBody {
   code: string;
   message: string;
+  fields?: FieldError[];
 }
 
 const DOMAIN_ERROR_STATUS: Record<string, number> = {
@@ -14,7 +20,10 @@ const DOMAIN_ERROR_STATUS: Record<string, number> = {
   LAST_OWNER_PROTECTED: HttpStatus.CONFLICT,
   RATE_LIMITED: HttpStatus.TOO_MANY_REQUESTS,
   TENANT_NAME_DUPLICATE: HttpStatus.CONFLICT,
-  PASSWORD_TOO_WEAK: HttpStatus.BAD_REQUEST
+  PASSWORD_TOO_WEAK: HttpStatus.BAD_REQUEST,
+  AGENT_NOT_FOUND: HttpStatus.NOT_FOUND,
+  AGENT_VERSION_MISSING: HttpStatus.CONFLICT,
+  SERVICE_INSTANCE_NOT_FOUND: HttpStatus.NOT_FOUND
 };
 
 // Texto de interface, deliberadamente diferente de DomainError.message (que é
@@ -26,7 +35,10 @@ const DOMAIN_ERROR_MESSAGE: Record<string, string> = {
   LAST_OWNER_PROTECTED: "Não é possível remover ou rebaixar o último owner do tenant.",
   RATE_LIMITED: "Muitas tentativas. Tente novamente em instantes.",
   TENANT_NAME_DUPLICATE: "Já existe um tenant com esse nome.",
-  PASSWORD_TOO_WEAK: "Senha muito curta."
+  PASSWORD_TOO_WEAK: "Senha muito curta.",
+  AGENT_NOT_FOUND: "Agente não encontrado no catálogo.",
+  AGENT_VERSION_MISSING: "Esta instância usa uma versão do agente que não está mais disponível.",
+  SERVICE_INSTANCE_NOT_FOUND: "Serviço não encontrado."
 };
 
 const DEFAULT_MESSAGE_BY_STATUS: Record<number, string> = {
@@ -51,6 +63,23 @@ function extractPayloadField(payload: unknown, field: string): string | undefine
     return typeof value === "string" ? value : undefined;
   }
   return undefined;
+}
+
+/**
+ * Só repassa `fields` — nunca o payload inteiro sem filtro, pra não vazar alguma
+ * outra chave que uma exceção decida carregar no futuro sem essa revisão em mente.
+ */
+function extractFieldErrors(payload: unknown): FieldError[] | undefined {
+  if (typeof payload !== "object" || payload === null || !("fields" in payload)) return undefined;
+  const fields = (payload as Record<string, unknown>).fields;
+  if (!Array.isArray(fields)) return undefined;
+  return fields.filter(
+    (item): item is FieldError =>
+      typeof item === "object" &&
+      item !== null &&
+      typeof (item as FieldError).path === "string" &&
+      typeof (item as FieldError).message === "string"
+  );
 }
 
 /**
@@ -81,7 +110,8 @@ export class ErrorFilter implements ExceptionFilter {
         extractPayloadField(payload, "message") ??
         DEFAULT_MESSAGE_BY_STATUS[status] ??
         "Não foi possível processar a requisição.";
-      const body: ErrorBody = { code, message };
+      const fields = extractFieldErrors(payload);
+      const body: ErrorBody = fields ? { code, message, fields } : { code, message };
       response.status(status).json(body);
       return;
     }

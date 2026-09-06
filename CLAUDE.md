@@ -150,6 +150,8 @@ Estas nasceram de erro real. Estão aqui para não acontecer de novo.
 
 **`drizzle-kit` 0.28 não gera `FORCE ROW LEVEL SECURITY` — só `ENABLE`.** Toda tabela nova sob RLS precisa da linha `ALTER TABLE ... FORCE ROW LEVEL SECURITY;` acrescentada à mão na migração gerada. Sem isso, o teste de introspecção de RLS reprova nomeando a tabela. (Redescoberto na T9 do M1 — já valia desde o M0.)
 
+**`pnpm run test:int` completo pode falhar por falta de recurso no Docker, não por regressão.** Se vários arquivos falharem juntos sem relação óbvia entre si, rode os arquivos afetados em lotes pequenos antes de assumir que quebrou algo — nenhum container órfão sobra depois, é só contenção de memória/CPU. (Descoberto na T11 do M1.)
+
 **Docker Compose cacheia o objeto de secret no daemon quando usa driver `file:`.** Trocar o conteúdo do arquivo no host depois que o container já foi criado não atualiza o secret montado — nem `up -d` nem `--force-recreate` bastam. É preciso `docker compose down` (que remove os secrets) antes de subir de novo. (Descoberto na T5 do M1, testando a KEK ao vivo.)
 
 ---

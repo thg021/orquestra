@@ -27,3 +27,12 @@ export const CONNECTORS = [
 export function validateBuiltinCatalog(): CatalogIssue[] {
   return validateCatalog({ agents: AGENTS, connectors: CONNECTORS });
 }
+
+/**
+ * Acha a definição exata que uma instância fixou — nunca "a versão mais recente".
+ * Devolve `undefined` em vez de lançar: uma instância presa a uma versão removida do
+ * código precisa continuar legível, só não pode ativar (edge case do design).
+ */
+export function findAgentDefinition(key: string, version: string) {
+  return AGENTS.find((agent) => agent.key === key && agent.version === version);
+}

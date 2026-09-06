@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 10/25 tasks (T1 a T10 concluídas em 2026-09-06) — US1 fechada
+**Fase atual:** M1 — Núcleo plugável em execução; 11/25 tasks (T1 a T11 concluídas em 2026-09-06) — US1 fechada
 
 ## Decisões
 
@@ -63,6 +63,7 @@
 - **Docker Compose cacheia o objeto de secret no daemon quando usa driver `file:`.** Trocar o conteúdo do arquivo host depois que o container já foi criado não atualiza o secret montado — nem `up -d` nem `--force-recreate` bastam. É preciso `docker compose down` (remove os secrets) antes de subir de novo. Descoberto testando a T5 ao vivo.
 - **`drizzle-kit` 0.28 não gera `FORCE ROW LEVEL SECURITY`** — só `ENABLE`. Toda tabela nova sob RLS precisa da linha `ALTER TABLE ... FORCE ROW LEVEL SECURITY;` acrescentada à mão na migração gerada, senão o teste de introspecção reprova nomeando a tabela. Confirmado de novo na T9 (já era conhecido do M0, T9 do M0).
 - **Teste que conta "o total de X no banco inteiro" quebra quando o schema cresce de forma legítima.** `migrate.int.test.ts` contava todas as foreign keys do banco esperando um número fixo; a chegada de `connector_bindings` (com FK de verdade) quebrou um teste que não tinha nada a ver com ela. Corrigido restringindo a query às tabelas que o teste queria provar. Lição: teste de contagem global é frágil — prefira escopar ao que o teste realmente afirma. Descoberto na T9.
+- **`pnpm run test:int` completo pode falhar por esgotamento de recursos, não por regressão.** Docker Desktop com 3.8 GB / 2 CPUs, dividido com outros contêineres do usuário (mongodb, mongo-express), começou a derrubar Testcontainers por timeout/OOM quando o número de suítes de integração cresceu com o M1. Nenhum container órfão fica pra trás — é contenção real de recurso. Confirmar rodando os arquivos afetados em lotes pequenos antes de reportar regressão. Descoberto na T11.
 - **Teste que varre todo tenant do banco precisa isolar tenant E recurso externo (KEK) por teste, não só um dos dois.** `kek-rotate.int.test.ts` criava um tenant novo por teste, mas reusava a mesma base de dados sem truncar `connector_connections`/`tenants` entre testes — sobra de conexão de um teste era "achada" pelo próximo, selada sob uma KEK que o `afterEach` já tinha apagado do disco, e a rotação quebrava com erro de autenticação do GCM. Corrigido truncando as duas tabelas em `afterEach`. Descoberto na T8.
 - **Zod 4 valida UUID pela RFC de verdade.** O fixture `11111111-1111-1111-1111-111111111111` passava no Zod 3 e é recusado no Zod 4: o nibble de versão e o de variante não batem com a RFC 9562. IDs reais (v7, do `newId`) passam normalmente — o teste é que estava frouxo. Ao escrever fixture de UUID, use um v7 de verdade. Descoberto na migração da T1.
 - **`import.meta` não compila sob o `module: CommonJS` do projeto.** Teste que precisa do próprio caminho resolve a partir de `process.cwd()` (o Vitest roda da raiz do monorepo). Descoberto na T1.

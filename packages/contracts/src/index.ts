@@ -14,4 +14,15 @@ export {
   catalogConnectorsResponseSchema
 } from "./catalog";
 export type { AgentSummary, ConnectorSummary } from "./catalog";
+export {
+  createServiceInstanceRequestSchema,
+  updateServiceInstanceRequestSchema,
+  serviceInstanceSummarySchema,
+  listServiceInstancesResponseSchema
+} from "./service-instances";
+export type {
+  CreateServiceInstanceRequest,
+  UpdateServiceInstanceRequest,
+  ServiceInstanceSummary
+} from "./service-instances";
 
