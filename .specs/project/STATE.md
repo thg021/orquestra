@@ -82,6 +82,7 @@
 - Limites de gasto por tenant sobre a contabilidade de custo já coletada
 - Onboarding self-service para novos tenants
 - Keycloak (ou outro provedor de identidade) para login de usuário no painel, se um tenant quiser entrar com a conta corporativa — avaliado em 2026-09-06 e descartado para custódia de credencial de conector, que é problema de credencial de máquina, não de identidade de pessoa
+- Swagger/OpenAPI para documentar a API — pedido pelo usuário em 2026-09-06. Sem milestone definido; entra quando a superfície de rotas do M1 estiver mais estável (depois da US2/US3), para não documentar rota que ainda vai mudar de forma
 
 ## Preferências
 
