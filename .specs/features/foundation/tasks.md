@@ -513,11 +513,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: `context7` (Vite) · Skill: NENHUMA
 
 **Done when:**
-- [ ] O cliente envia cookie em toda requisição (`credentials: 'include'`)
-- [ ] Resposta 401 durante o uso leva ao login, sem exibir erro cru
-- [ ] Erro de rede é distinguido de 401 e não desloga o usuário
-- [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 6 testes unitários passam (sem exclusão silenciosa)
+- [x] O cliente envia cookie em toda requisição (`credentials: 'include'`)
+- [x] Resposta 401 durante o uso leva ao login, sem exibir erro cru
+- [x] Erro de rede é distinguido de 401 e não desloga o usuário
+- [x] Gate check passa: `pnpm typecheck && pnpm test:unit`
+- [x] Test count: 6 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(web): base do painel com roteador e cliente de API`
