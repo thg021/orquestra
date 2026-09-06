@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 2 de 25 tasks (T1, T2 concluídas em 06/09/2026)
+**Status:** Em andamento — 3 de 25 tasks (T1, T2, T3 concluídas em 06/09/2026)
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -116,9 +116,16 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `validateCatalog()` passa com as definições reais carregadas
-- [ ] Toda capability exigida pelo agente é satisfeita por ao menos um conector
-- [ ] Campos de credencial de cada conector estão marcados com `secret()`; `baseUrl` e afins não
+- [x] `validateCatalog()` passa com as definições reais carregadas
+- [x] Toda capability exigida pelo agente é satisfeita por ao menos um conector
+- [x] Campos de credencial de cada conector estão marcados com `secret()`; `baseUrl` e afins não
+
+**Feito em 06/09/2026.** 41 testes novos (72 no pacote). Duas decisões tomadas nesta task, confirmadas com o usuário:
+
+- `caminho_base_local` do `clientes.yaml` **não** virou campo de configuração — é a capability `file-storage`, resolvida pela conexão. `tipos_documento`/`categorias_documentos` também não são configuráveis: são regra de negócio fixa, extraída para código testável no M4.
+- Conectores OAuth (`onedrive`, `google-drive`, `gmail`) usam `authKind: oauth` mas o `authSchema` do M1 pede um `refreshToken` colado à mão — ponte até o fluxo real do M3, que substitui o formulário por um botão sem mudar o formato salvo no cofre.
+- O canal de contato de um cliente na coleção `customers` reaproveita o vocabulário de capability de saída (`email`/`messaging`/`document-delivery`) em vez de inventar um enum novo — é a mesma escolha "por destinatário" do design §4, expressa dado a dado.
+- Nomes de campo em inglês (`signature`, `defaultDeadline`, `defaultCc`), rótulo em português via `.meta({ title })` — D12 aplicada ao schema de configuração pela primeira vez.
 
 ---
 

@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 2/25 tasks (T1, T2 concluídas em 2026-09-06)
+**Fase atual:** M1 — Núcleo plugável em execução; 3/25 tasks (T1, T2, T3 concluídas em 2026-09-06)
 
 ## Decisões
 
@@ -31,6 +31,8 @@
 | D22 | 2026-09-06 | Catálogo servido do código (`packages/catalog`), sem tabela no banco — uma fonte de verdade só; a validação de boot substitui a integridade referencial | M1 design §Componentes |
 | D23 | 2026-09-06 | `config_schema` e `auth_schema` escritos em Zod, com JSON Schema derivado para gerar o formulário do painel | M1 design §Decisões técnicas |
 | D30 | 2026-09-06 | Monorepo migrado do Zod 3 para o Zod 4.5.4. `z.toJSONSchema()` é nativo (dispensa `zod-to-json-schema`) e `.meta()` carrega metadado custom até o JSON Schema — é o mecanismo do marcador `secret()`, no lugar do `.describe()` estruturado que o design previa. Revisa a D23. | T1 |
+| D31 | 2026-09-06 | Conectores OAuth do M1 (`onedrive`, `google-drive`, `gmail`) pedem um `refreshToken` colado à mão no `auth_schema` — ponte até o fluxo real do M3, sem mudar o formato salvo no cofre | T3 |
+| D32 | 2026-09-06 | Canal de contato de `customers` reaproveita o vocabulário de capability de saída (`email`/`messaging`/`document-delivery`) em vez de um enum próprio | T3 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |

@@ -17,3 +17,11 @@ export { toFormSchema, checkFormSchemaSupport } from "./json-schema";
 export type { FormSchemaSupport } from "./json-schema";
 export { validateCatalog } from "./validate";
 export type { CatalogIssue, CatalogInput } from "./validate";
+
+export { accountingRoutine } from "./agents/accounting-routine";
+export { platformUpload } from "./connectors/platform-upload";
+export { onedrive } from "./connectors/onedrive";
+export { googleDrive } from "./connectors/google-drive";
+export { gmail } from "./connectors/gmail";
+export { whatsapp } from "./connectors/whatsapp";
+export { fortesConecta } from "./connectors/fortes-conecta";
