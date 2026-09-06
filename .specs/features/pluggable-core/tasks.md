@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 9 de 25 tasks (T1 a T7, T9, T10 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 10 de 25 tasks (T1 a T10 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -218,9 +218,13 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Interromper no meio deixa as duas versões convivendo, ambas legíveis
-- [ ] Rodar de novo conclui o trabalho e é inofensivo quando não há mais o que fazer
-- [ ] Nenhum plaintext de segredo é decifrado durante a rotação
+- [x] Interromper no meio deixa as duas versões convivendo, ambas legíveis
+- [x] Rodar de novo conclui o trabalho e é inofensivo quando não há mais o que fazer
+- [x] Nenhum plaintext de segredo é decifrado durante a rotação
+
+**Feito em 06/09/2026.** `runKekRotate` varre todo tenant (via `withoutTenant` na tabela global `tenants`) e, para cada um, cada conexão pendente é uma transação própria (`withTenant` por conexão) — interromper no meio deixa parte já na versão nova e parte na antiga, ambas legíveis, porque a KEK antiga continua carregada enquanto convivem. Idempotente por construção: a consulta `key_version < toVersion` já pula sozinha o que uma execução anterior deixou pronto, sem precisar de arquivo de progresso. Ligado à CLI como `kek:rotate --to-version <n>`.
+
+Achado de teste: os quatro cenários (interrupção, retomada, no-op, secret_envelope intocado) só ficaram estáveis depois de isolar tenant e diretório de KEK por teste — a suíte varre *todo* tenant do banco, então sobra de um teste contaminava o próximo. Lição registrada no STATE.
 
 ---
 

@@ -3,6 +3,7 @@ import { closeDefaultPool } from "@orquestra/db";
 import { loadConfig } from "../config/load-config";
 import { runTenantCreate } from "./commands/tenant-create";
 import { runUserResetPassword } from "./commands/user-reset-password";
+import { runKekRotate } from "./commands/kek-rotate";
 
 function parseFlags(argv: string[]): Record<string, string> {
   const flags: Record<string, string> = {};
@@ -42,12 +43,26 @@ async function resolvePassword(flags: Record<string, string>): Promise<string> {
 }
 
 async function main(): Promise<void> {
-  loadConfig(process.env);
+  const config = loadConfig(process.env);
 
   const [command, ...rest] = process.argv.slice(2);
   const flags = parseFlags(rest);
 
   switch (command) {
+    case "kek:rotate": {
+      if (!flags["to-version"]) {
+        throw new Error("Uso: kek:rotate --to-version <número>");
+      }
+      const toVersion = Number(flags["to-version"]);
+      if (!Number.isInteger(toVersion) || toVersion <= 0) {
+        throw new Error(`--to-version precisa ser um inteiro positivo, recebido: "${flags["to-version"]}"`);
+      }
+      const result = await runKekRotate({ toVersion, kekDir: config.KEK_DIR });
+      console.log(
+        `Rotação para a versão ${toVersion} concluída: ${result.connectionsRewrapped} conexão(ões) recifrada(s) em ${result.tenantsScanned} tenant(s).`
+      );
+      return;
+    }
     case "tenant:create": {
       if (!flags.name || !flags.email) {
         throw new Error("Uso: tenant:create --name <nome> --email <email> [--password <senha>]");
@@ -67,7 +82,9 @@ async function main(): Promise<void> {
       return;
     }
     default:
-      throw new Error(`Comando desconhecido: "${command ?? ""}". Use tenant:create ou user:reset-password.`);
+      throw new Error(
+        `Comando desconhecido: "${command ?? ""}". Use tenant:create, user:reset-password ou kek:rotate.`
+      );
   }
 }
 
