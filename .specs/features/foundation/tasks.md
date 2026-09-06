@@ -352,12 +352,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] A coluna persistida é o hash; o token cru não aparece em nenhuma coluna
-- [ ] Sessão expirada não resolve, mesmo com token correto
-- [ ] `revoke` remove a linha e a resolução seguinte falha
-- [ ] Token inexistente ou malformado resolve como ausente, sem lançar
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 6 testes de integração passam (sem exclusão silenciosa)
+- [x] A coluna persistida é o hash; o token cru não aparece em nenhuma coluna
+- [x] Sessão expirada não resolve, mesmo com token correto
+- [x] `revoke` remove a linha e a resolução seguinte falha
+- [x] Token inexistente ou malformado resolve como ausente, sem lançar
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 6 testes de integração passam (sem exclusão silenciosa)
 
 **Tests:** integration · **Gate:** full
 **Commit:** `feat(api): sessões com estado no Postgres`
