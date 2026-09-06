@@ -398,12 +398,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Tentativas acima do limite dentro da janela passam a ser recusadas
-- [ ] A janela expira e libera novas tentativas
-- [ ] `reset` zera o contador
-- [ ] A chave é o e-mail normalizado, de modo que variação de caixa não contorna o limite
-- [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 5 testes unitários passam (sem exclusão silenciosa)
+- [x] Tentativas acima do limite dentro da janela passam a ser recusadas
+- [x] A janela expira e libera novas tentativas
+- [x] `reset` zera o contador
+- [x] A chave é o e-mail normalizado, de modo que variação de caixa não contorna o limite
+- [x] Gate check passa: `pnpm typecheck && pnpm test:unit`
+- [x] Test count: 5 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(api): limitador de tentativas de autenticação`
