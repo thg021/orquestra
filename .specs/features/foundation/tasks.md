@@ -466,11 +466,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Papel insuficiente responde 403 de autorização, com código distinto do 401
-- [ ] Papel suficiente atravessa a rota de exemplo
-- [ ] Rebaixar ou remover o último `owner` é recusado; com dois owners a operação passa
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 5 testes e2e passam (sem exclusão silenciosa)
+- [x] Papel insuficiente responde 403 de autorização, com código distinto do 401
+- [x] Papel suficiente atravessa a rota de exemplo
+- [x] Rebaixar ou remover o último `owner` é recusado; com dois owners a operação passa
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 5 testes e2e passam (sem exclusão silenciosa)
 
 **Tests:** e2e · **Gate:** full
 **Commit:** `feat(api): autorização por papel`

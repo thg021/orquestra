@@ -31,6 +31,11 @@ export class TenantScopeInterceptor implements NestInterceptor {
       throw new UnauthorizedException();
     }
 
+    // Idempotente: se um guard anterior (RoleGuard) já resolveu o tenant, não reconsulta.
+    if ("tenantId" in sessionContext) {
+      return next.handle();
+    }
+
     const membership = await findActiveMembership(sessionContext.userId);
     if (!membership) {
       throw new ForbiddenException({ code: NO_MEMBERSHIP_ERROR_CODE });
