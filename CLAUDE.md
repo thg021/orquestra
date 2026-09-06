@@ -53,7 +53,19 @@ Arquivos que mandam:
 | `.specs/features/<nome>/design.md` | como vai ser construído |
 | `.specs/features/<nome>/tasks.md` | as tarefas, uma entrega cada, com dependências |
 | `.specs/codebase/TESTING.md` | como os testes rodam |
+| `.specs/codebase/PRINCIPLES.md` | princípios de código: fronteiras, domínio, TDD, segurança |
+| `.specs/codebase/stacks/` | padrões por stack — leia o da stack que você vai tocar |
 | `docs/adr/` | decisões difíceis de reverter, com as alternativas descartadas |
+
+Antes de escrever código, leia o documento da stack que vai tocar:
+
+```
+  backend, API, NestJS . . . . .  .specs/codebase/stacks/backend-nestjs.md
+  painel, React, Vite  . . . . .  .specs/codebase/stacks/frontend-react.md
+  banco, migração, RLS . . . . .  .specs/codebase/stacks/data-drizzle-postgres.md
+  teste . . . . . . . . . . . .   .specs/codebase/stacks/testing-vitest.md
+  qualquer um deles  . . . . . .  .specs/codebase/PRINCIPLES.md
+```
 
 Board da Asana: projeto **Orquestra**, workspace My Company.
 
