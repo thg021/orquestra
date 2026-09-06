@@ -170,12 +170,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Sob contexto de A, `select *` sem `where` devolve só linhas de A
-- [ ] Insert com `tenant_id` de B sob contexto de A é recusado pelo `with check`
-- [ ] Update que tentaria mover linha para outro tenant é recusado
-- [ ] Sem contexto estabelecido, a tabela devolve zero linhas em vez de erro
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 6 testes de integração passam (sem exclusão silenciosa)
+- [x] Sob contexto de A, `select *` sem `where` devolve só linhas de A
+- [x] Insert com `tenant_id` de B sob contexto de A é recusado pelo `with check`
+- [x] Update que tentaria mover linha para outro tenant é recusado
+- [x] Sem contexto estabelecido, a tabela devolve zero linhas em vez de erro
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 6 testes de integração passam (sem exclusão silenciosa)
 
 **Tests:** integration · **Gate:** full
 **Verify:** semear dois tenants e rodar a suíte de isolamento.

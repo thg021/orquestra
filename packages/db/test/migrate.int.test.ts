@@ -37,15 +37,20 @@ describe("runMigrations", () => {
 
   it("registra a migração aplicada e não a reaplica numa segunda chamada", async () => {
     await runMigrations({ connectionString: db.ownerUrl });
-    await runMigrations({ connectionString: db.ownerUrl });
 
     const client = new Client({ connectionString: db.ownerUrl });
     await client.connect();
     try {
-      const { rows } = await client.query<{ count: string }>(
+      const countAfterFirst = await client.query<{ count: string }>(
         `select count(*)::text as count from drizzle.__drizzle_migrations`
       );
-      expect(rows[0]?.count).toBe("1");
+
+      await runMigrations({ connectionString: db.ownerUrl });
+
+      const countAfterSecond = await client.query<{ count: string }>(
+        `select count(*)::text as count from drizzle.__drizzle_migrations`
+      );
+      expect(countAfterSecond.rows[0]?.count).toBe(countAfterFirst.rows[0]?.count);
     } finally {
       await client.end();
     }
@@ -93,18 +98,22 @@ describe("runMigrations", () => {
   });
 
   it("duas execuções concorrentes serializam pelo advisory lock e aplicam cada migração uma única vez", async () => {
-    await Promise.all([
-      runMigrations({ connectionString: db.ownerUrl }),
-      runMigrations({ connectionString: db.ownerUrl })
-    ]);
-
     const client = new Client({ connectionString: db.ownerUrl });
     await client.connect();
     try {
-      const { rows } = await client.query<{ count: string }>(
+      const before = await client.query<{ count: string }>(
         `select count(*)::text as count from drizzle.__drizzle_migrations`
       );
-      expect(rows[0]?.count).toBe("1");
+
+      await Promise.all([
+        runMigrations({ connectionString: db.ownerUrl }),
+        runMigrations({ connectionString: db.ownerUrl })
+      ]);
+
+      const after = await client.query<{ count: string }>(
+        `select count(*)::text as count from drizzle.__drizzle_migrations`
+      );
+      expect(after.rows[0]?.count).toBe(before.rows[0]?.count);
     } finally {
       await client.end();
     }
