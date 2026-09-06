@@ -535,12 +535,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Credencial válida navega para o shell
-- [ ] Falha exibe mensagem genérica, sem revelar se o e-mail existe
-- [ ] O botão fica desabilitado durante o envio, impedindo duplo submit
-- [ ] O campo de senha não é persistido em nenhum armazenamento do navegador
-- [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 5 testes unitários passam (sem exclusão silenciosa)
+- [x] Credencial válida navega para o shell
+- [x] Falha exibe mensagem genérica, sem revelar se o e-mail existe
+- [x] O botão fica desabilitado durante o envio, impedindo duplo submit
+- [x] O campo de senha não é persistido em nenhum armazenamento do navegador
+- [x] Gate check passa: `pnpm typecheck && pnpm test:unit`
+- [x] Test count: 5 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(web): tela de autenticação`
