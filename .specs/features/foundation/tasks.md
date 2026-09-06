@@ -284,12 +284,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Ambiente completo produz config tipada
-- [ ] Três variáveis ausentes geram um erro que nomeia as três
-- [ ] Valor inválido (porta não numérica, URL malformada) é recusado
-- [ ] A mensagem de erro não ecoa valor de variável, apenas o nome
-- [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 5 testes unitários passam (sem exclusão silenciosa)
+- [x] Ambiente completo produz config tipada
+- [x] Três variáveis ausentes geram um erro que nomeia as três
+- [x] Valor inválido (porta não numérica, URL malformada) é recusado
+- [x] A mensagem de erro não ecoa valor de variável, apenas o nome
+- [x] Gate check passa: `pnpm typecheck && pnpm test:unit`
+- [x] Test count: 5 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(api): validação de ambiente na inicialização`

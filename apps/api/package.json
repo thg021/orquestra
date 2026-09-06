@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "cli": "tsx src/cli/main.ts"
   },
