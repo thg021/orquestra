@@ -1,0 +1,33 @@
+{
+  "name": "orquestra",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "pnpm -r --workspace-concurrency=1 run typecheck",
+    "test:unit": "vitest run --project unit --project unit:web --passWithNoTests",
+    "test:int": "vitest run --project integration --passWithNoTests",
+    "test:e2e": "vitest run --project e2e --passWithNoTests",
+    "test": "vitest run --passWithNoTests",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run test",
+    "build": "pnpm -r run build",
+    "dev": "docker compose -f docker/compose.yml up --build",
+    "cli": "pnpm --filter @orquestra/api run cli"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/node": "^22.10.0",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "prettier": "^3.4.1",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.17.0",
+    "vitest": "^2.1.8"
+  }
+}
