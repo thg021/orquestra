@@ -1,7 +1,7 @@
 # State
 
-**Última atualização:** 2026-09-05
-**Fase atual:** M0 — Fundação concluído em 2026-09-06 (23/23 tasks); próximo: iniciar M1 — Núcleo plugável
+**Última atualização:** 2026-09-06
+**Fase atual:** M1 — Núcleo plugável, especificado em 2026-09-06 (`.specs/features/pluggable-core/`); 0/25 tasks executadas
 
 ## Decisões
 
@@ -28,6 +28,14 @@
 | D19 | 2026-09-05 | Dois papéis de banco: `orquestra_owner` (DDL, migrações) e `orquestra_app` (DML, `NOBYPASSRLS`), com `FORCE ROW LEVEL SECURITY` nas tabelas de tenant | M0 design §Modelo de dados |
 | D20 | 2026-09-05 | Monorepo em `apps/{api,web}` + `packages/{db,core,contracts}`, com regra de dependência que impede `core`/`db` conhecerem NestJS | M0 design §Estrutura do monorepo |
 | D21 | 2026-09-05 | Vitest como runner único do monorepo e Testcontainers para o Postgres dos testes de RLS; testes `e2e` não rodam em paralelo | `.specs/codebase/TESTING.md` |
+| D22 | 2026-09-06 | Catálogo servido do código (`packages/catalog`), sem tabela no banco — uma fonte de verdade só; a validação de boot substitui a integridade referencial | M1 design §Componentes |
+| D23 | 2026-09-06 | `config_schema` e `auth_schema` escritos em Zod, com JSON Schema derivado para gerar o formulário do painel | M1 design §Decisões técnicas |
+| D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
+| D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
+| D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |
+| D27 | 2026-09-06 | Revogação de conexão nunca é bloqueada por dependência; instâncias que perdem capability obrigatória caem para `paused` com motivo registrado | M1 design §Fluxos |
+| D28 | 2026-09-06 | Gate de ativação como função pura sobre catálogo, instância e bindings — testável sem banco e reutilizável pelo worker do M2 | M1 design §Componentes |
+| D29 | 2026-09-06 | Renderizador de formulário próprio sobre subconjunto documentado de JSON Schema, validado no boot, em vez de biblioteca de formulário-por-esquema | M1 design §Decisões técnicas |
 
 ## Bloqueios e riscos abertos
 
@@ -37,6 +45,8 @@
 | ~~R2~~ | ~~Cobertura da API do Fortes Conecta.~~ **Fechado em 2026-09-05** — não é risco: há três vias de entrega escolhidas por destinatário; lacuna no Fortes afeta só os clientes daquele canal. | — |
 | R3 | NestJS e BullMQ são escolhas de conveniência ainda não validadas na prática. | Revisáveis na Fase 0 sem impacto no resto do design. |
 | R4 | Reescrever regras hoje implícitas no prompt da skill pode perder comportamento. | Cada regra migrada vira teste antes de virar código (M4). |
+| R5 | Perder a KEK torna todo segredo de conector irrecuperável. | Custódia e rotação viram procedimento escrito no M1 (T25), e `kek:rotate` é provado em teste antes de existir credencial real. |
+| R6 | O subconjunto de JSON Schema do formulário pode ficar apertado para um agente futuro. | `validateCatalog` reprova na subida, em desenvolvimento — a pressão aparece cedo e barata (M1 T2). |
 
 ## Lições
 
@@ -60,6 +70,7 @@
 - Banco dedicado por tenant para planos com exigência de isolamento físico
 - Limites de gasto por tenant sobre a contabilidade de custo já coletada
 - Onboarding self-service para novos tenants
+- Keycloak (ou outro provedor de identidade) para login de usuário no painel, se um tenant quiser entrar com a conta corporativa — avaliado em 2026-09-06 e descartado para custódia de credencial de conector, que é problema de credencial de máquina, não de identidade de pessoa
 
 ## Preferências
 

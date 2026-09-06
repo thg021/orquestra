@@ -1,31 +1,31 @@
 # Roadmap
 
-**Current Milestone:** M0 — Fundação
-**Status:** Planning
+**Current Milestone:** M1 — Núcleo plugável
+**Status:** Especificado — design e tasks prontos (`.specs/features/pluggable-core/`)
 
 ---
 
-## M0 — Fundação
+## M0 — Fundação ✅ Concluído em 2026-09-06
 
 **Goal:** Existe um sistema multitenant que sobe, autentica e isola dados no banco. Nada plugável ainda, mas a base de segurança está provada.
 **Target:** Login funcional, painel vazio, e teste de isolamento verde.
 
 ### Features
 
-**Ambiente de desenvolvimento** — PLANNED
+**Ambiente de desenvolvimento** — DONE
 
 - Monorepo pnpm com workspaces (`api`, `web`, pacotes compartilhados)
 - Docker Compose subindo Postgres, Redis, api e web
 - Pipeline local de lint, typecheck e testes
 
-**Persistência multitenant** — PLANNED
+**Persistência multitenant** — DONE
 
 - Migrações versionadas
 - Convenção de `tenant_id` e policies de RLS
 - Estabelecimento de contexto de tenant por transação (`SET LOCAL`)
 - Teste de isolamento como gate de segurança
 
-**Identidade e acesso** — PLANNED
+**Identidade e acesso** — DONE
 
 - `Tenant`, `User`, `Membership` com papéis (`owner`, `admin`, `operator`)
 - Autenticação e sessão
@@ -33,33 +33,35 @@
 
 ---
 
-## M1 — Núcleo plugável
+## M1 — Núcleo plugável ◄ atual
 
+**Spec:** `.specs/features/pluggable-core/`
 **Goal:** Um tenant consegue instalar, configurar e conectar um serviço pelo painel — sem executá-lo ainda.
 
 ### Features
 
-**Catálogo** — PLANNED
+**Catálogo** — SPECIFIED
 
 - `AgentDefinition` e `ConnectorDefinition` carregados do código
 - Capabilities como contrato entre agente e conector
 - Listagem do catálogo no painel
 
-**Service instances** — PLANNED
+**Service instances** — SPECIFIED
 
 - Ciclo de vida: instalar, ativar, pausar, remover (remoção lógica)
 - Config por instância validada contra `config_schema`
 - Formulário de configuração gerado a partir do schema
 
-**Conexões de conector (cofre de segredos)** — PLANNED
+**Conexões de conector (cofre de segredos)** — SPECIFIED
 
 - Envelope encryption conforme ADR-001: DEK por conexão derivada por tenant, KEK via Docker secret, AES-256-GCM com versão de chave
 - `ConnectorConnection` por tenant; API write-only (nenhum endpoint retorna segredo)
-- Fluxo OAuth para fornecedores que suportam; formulário por `auth_schema` para os demais
+- Credencial por formulário a partir do `auth_schema`; o fluxo OAuth foi adiado para o M3, junto do primeiro adapter que consome o token (o modelo de dados já nasce preparado)
 - `ConnectorBinding` preenchendo as capabilities exigidas pelo agente
 - Bloqueio de ativação enquanto houver capability não preenchida
 - Revogação e rotação de credencial sem recriar bindings
 - Teste de contenção de segredo (não vaza em log, job, resposta de API)
+- Verificação de conexão declarada, respondendo `unverified` até existir adapter (M3)
 
 ---
 
