@@ -443,12 +443,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Login bem-sucedido devolve cookie `httpOnly`, `secure` e `sameSite`, e nenhum token no corpo
-- [ ] Após `logout`, o cookie capturado passa a receber 401 na mesma rota
-- [ ] Acima do limite de tentativas, a resposta é idêntica para senha certa e errada
-- [ ] Nenhuma resposta de erro contém hash, SQL, string de conexão ou token
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 9 testes e2e passam (sem exclusão silenciosa)
+- [x] Login bem-sucedido devolve cookie `httpOnly`, `secure` e `sameSite`, e nenhum token no corpo
+- [x] Após `logout`, o cookie capturado passa a receber 401 na mesma rota
+- [x] Acima do limite de tentativas, a resposta é idêntica para senha certa e errada
+- [x] Nenhuma resposta de erro contém hash, SQL, string de conexão ou token
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 9 testes e2e passam (sem exclusão silenciosa)
 
 **Tests:** e2e · **Gate:** full
 **Commit:** `feat(api): rotas de autenticação com sessão em cookie`

@@ -50,7 +50,9 @@ RLS não é simulável com banco em memória. Todo teste que toca policy roda co
 | full | `pnpm check` (= `pnpm lint && pnpm typecheck && pnpm test`) | Task cujo tipo é `integration` ou `e2e` |
 | build | `pnpm build` | Task que só mexe em configuração de build ou infra |
 
-Scripts na raiz: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm test:int`, `pnpm test:e2e`, `pnpm test` (os três), `pnpm check`, `pnpm build`. Qualquer etapa que falhe encerra com código diferente de zero (ENV-04).
+Scripts na raiz: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm test:int`, `pnpm test:e2e`, `pnpm test` (os três, em sequência), `pnpm check`, `pnpm build`. Qualquer etapa que falhe encerra com código diferente de zero (ENV-04).
+
+**`pnpm test` roda os três projetos em sequência, nunca `vitest run` direto sobre o workspace inteiro.** `fileParallelism: false` só serializa arquivos *dentro* de um projeto — `integration` e `e2e` são projetos distintos e o Vitest os roda concorrentemente por padrão. Como cada suíte de integração/e2e sobe seu próprio Postgres via Testcontainers, rodar os dois projetos ao mesmo tempo multiplica containers simultâneos e estourou a VM do Docker Desktop (3.8 GB) em desenvolvimento, produzindo timeouts e `pool` undefined em `afterAll` — sintoma de contenção de recursos, não de bug no código. Descoberto fechando T17.
 
 ---
 

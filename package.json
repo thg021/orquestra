@@ -13,7 +13,7 @@
     "test:unit": "vitest run --project unit --project unit:web --passWithNoTests",
     "test:int": "vitest run --project integration --passWithNoTests",
     "test:e2e": "vitest run --project e2e --passWithNoTests",
-    "test": "vitest run --passWithNoTests",
+    "test": "pnpm run test:unit && pnpm run test:int && pnpm run test:e2e",
     "check": "pnpm run lint && pnpm run typecheck && pnpm run test",
     "build": "pnpm -r run build",
     "dev": "docker compose -f docker/compose.yml up --build",

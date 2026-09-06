@@ -5,6 +5,7 @@ import { runMigrations, type RunMigrationsOptions } from "@orquestra/db";
 import { AppModule } from "./app.module";
 import { loadConfig, type AppConfig } from "./config/load-config";
 import { HealthService } from "./health/health.service";
+import { ErrorFilter } from "./common/error.filter";
 
 export interface BootstrapOptions {
   /** Injetável em teste para simular indisponibilidade do Postgres sem um banco real. */
@@ -72,6 +73,7 @@ export async function bootstrap(
 
   const app = await NestFactory.create(AppModule.register(config), { logger: ["error", "warn"] });
   app.use(cookieParser());
+  app.useGlobalFilters(new ErrorFilter());
   app.get(HealthService).markMigrationsApplied();
 
   return { config, app };
