@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 6 de 25 tasks (T1 a T6 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 7 de 25 tasks (T1 a T7 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -199,9 +199,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Após recifrar, `open` continua devolvendo o mesmo plaintext
-- [ ] O `secret_envelope` é byte a byte idêntico ao anterior
-- [ ] Conexões em v1 e em v2 convivem legíveis no mesmo conjunto
+- [x] Após recifrar, `open` continua devolvendo o mesmo plaintext
+- [x] O `secret_envelope` é byte a byte idêntico ao anterior
+- [x] Conexões em v1 e em v2 convivem legíveis no mesmo conjunto
+
+**Feito em 06/09/2026.** `rewrapDek` abre a DEK sob a versão antiga e recifra sob a nova, devolvendo um `SealedSecret` com `secretEnvelope` intocado (comparado byte a byte no teste). As funções de cifragem (`encrypt`/`decrypt`/AAD) saíram de `seal.ts` para `gcm.ts` compartilhado, sem mudar comportamento — só para não duplicar entre `seal.ts` e `rewrap.ts`. 8 testes novos (41 no pacote).
 
 ---
 

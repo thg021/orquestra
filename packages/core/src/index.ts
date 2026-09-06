@@ -18,6 +18,7 @@ export { loadKeks, InvalidKekError } from "./vault/kek";
 export type { KekSet } from "./vault/kek";
 export { createVault, SealError, OpenError } from "./vault/seal";
 export type { Vault, SealedSecret } from "./vault/seal";
+export { rewrapDek } from "./vault/rewrap";
 export { encodeEnvelope, decodeEnvelope, InvalidEnvelopeError } from "./vault/envelope";
 export type { DecodedEnvelope } from "./vault/envelope";
 
