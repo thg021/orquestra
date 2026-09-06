@@ -18,6 +18,8 @@ Este documento é normativo para todos os milestones. Toda task da fase Tasks ti
 
 RLS não é simulável com banco em memória. Todo teste que toca policy roda contra Postgres real.
 
+**Injeção de dependência do NestJS sob Vitest.** O Vitest transpila via esbuild, que não emite `design:paramtypes` (a metadata que `emitDecoratorMetadata` produz só quando o `tsc` real roda). Injeção implícita por tipo funciona no `pnpm build` (tsc de verdade) mas falha silenciosamente sob teste — o construtor recebe `undefined`. Por isso todo construtor de controller/provider usa `@Inject(Token)` explícito, nunca só o tipo. Descoberto implementando o bootstrap do M0 (T11).
+
 ---
 
 ## Test Coverage Matrix

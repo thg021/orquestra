@@ -307,12 +307,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: `context7` (bootstrap NestJS) · Skill: NENHUMA
 
 **Done when:**
-- [ ] `/health` só responde pronto depois das migrações aplicadas
-- [ ] Variável faltante encerra o processo com código diferente de zero, sem abrir a porta
-- [ ] Postgres indisponível gera retry com backoff e, esgotado o limite, encerra com código diferente de zero
-- [ ] `PROCESS_ROLE=worker` sobe sem registrar rotas HTTP
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 4 testes e2e passam (sem exclusão silenciosa)
+- [x] `/health` só responde pronto depois das migrações aplicadas
+- [x] Variável faltante encerra o processo com código diferente de zero, sem abrir a porta
+- [x] Postgres indisponível gera retry com backoff e, esgotado o limite, encerra com código diferente de zero
+- [x] `PROCESS_ROLE=worker` sobe sem registrar rotas HTTP
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 4 testes e2e passam (sem exclusão silenciosa)
 
 **Tests:** e2e · **Gate:** full
 **Commit:** `feat(api): bootstrap com migrações e endpoint de saúde`
