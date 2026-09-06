@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 5/25 tasks (T1 a T5 concluídas em 2026-09-06) — US1 fechada
+**Fase atual:** M1 — Núcleo plugável em execução; 6/25 tasks (T1 a T6 concluídas em 2026-09-06) — US1 fechada
 
 ## Decisões
 
@@ -34,6 +34,7 @@
 | D31 | 2026-09-06 | Conectores OAuth do M1 (`onedrive`, `google-drive`, `gmail`) pedem um `refreshToken` colado à mão no `auth_schema` — ponte até o fluxo real do M3, sem mudar o formato salvo no cofre | T3 |
 | D32 | 2026-09-06 | Canal de contato de `customers` reaproveita o vocabulário de capability de saída (`email`/`messaging`/`document-delivery`) em vez de um enum próprio | T3 |
 | D33 | 2026-09-06 | KEK montada como diretório de Docker secrets (um arquivo por versão, nome = número da versão) em vez de uma variável só — é o que sustenta múltiplas versões coexistindo (ROT-04/D24) | T5 |
+| D34 | 2026-09-06 | AAD do envelope da DEK inclui a versão de KEK; AAD do envelope do segredo não inclui — a DEK nunca muda numa rotação de KEK, então seu AAD não pode depender de uma versão que muda sem ela. Refina o design §Cofre, que descrevia um único AAD uniforme. | T6 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |

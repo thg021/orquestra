@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 5 de 25 tasks (T1 a T5 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 6 de 25 tasks (T1 a T6 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -179,10 +179,12 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `open(seal(x)) === x` para segredos de tamanhos variados, incluindo unicode
-- [ ] O mesmo plaintext em dois tenants produz envelopes diferentes
-- [ ] Envelope de um tenant não abre sob outro tenant nem sob outro `connection_id` (o AAD falha)
-- [ ] Nenhuma mensagem de erro do módulo contém plaintext, chave ou envelope — com teste que verifica
+- [x] `open(seal(x)) === x` para segredos de tamanhos variados, incluindo unicode
+- [x] O mesmo plaintext em dois tenants produz envelopes diferentes
+- [x] Envelope de um tenant não abre sob outro tenant nem sob outro `connection_id` (o AAD falha)
+- [x] Nenhuma mensagem de erro do módulo contém plaintext, chave ou envelope — com teste que verifica
+
+**Feito em 06/09/2026.** `createVault(keks)` devolve `{ seal, open }`. Refinamento sobre o design: o AAD da DEK amarra tenant+conexão+versão de KEK (é o que muda no rewrap da T7); o AAD do segredo amarra só tenant+conexão, sem a versão — porque a DEK em si nunca muda numa rotação, e se o AAD do segredo dependesse da versão de KEK, rotacionar exigiria recifrar o segredo também, quebrando a promessa de "sem tocar o secret_envelope". Documentado como D34 no STATE. 15 testes novos (33 no pacote).
 
 ---
 
