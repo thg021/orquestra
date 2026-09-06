@@ -558,12 +558,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Visitante não autenticado em rota protegida é redirecionado ao login
-- [ ] Autenticado vê o nome do tenant ativo e o do usuário no shell
-- [ ] Sair encerra a sessão e retorna ao login
-- [ ] Enquanto `me` carrega, a tela mostra estado de carregamento em vez de piscar o login
-- [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 5 testes unitários passam (sem exclusão silenciosa)
+- [x] Visitante não autenticado em rota protegida é redirecionado ao login
+- [x] Autenticado vê o nome do tenant ativo e o do usuário no shell
+- [x] Sair encerra a sessão e retorna ao login
+- [x] Enquanto `me` carrega, a tela mostra estado de carregamento em vez de piscar o login
+- [x] Gate check passa: `pnpm typecheck && pnpm test:unit`
+- [x] Test count: 5 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(web): shell autenticado com tenant ativo`
