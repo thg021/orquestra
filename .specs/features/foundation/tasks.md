@@ -330,11 +330,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Busca por e-mail é insensível a caixa e a espaço nas bordas
-- [ ] Nome de tenant duplicado viola a unicidade e o erro é traduzido para erro de domínio
-- [ ] `findActiveMembership` devolve o vínculo mais antigo de forma determinística
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 6 testes de integração passam (sem exclusão silenciosa)
+- [x] Busca por e-mail é insensível a caixa e a espaço nas bordas
+- [x] Nome de tenant duplicado viola a unicidade e o erro é traduzido para erro de domínio
+- [x] `findActiveMembership` devolve o vínculo mais antigo de forma determinística
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 6 testes de integração passam (sem exclusão silenciosa)
 
 **Tests:** integration · **Gate:** full
 **Commit:** `feat(api): repositórios de identidade`
