@@ -23,7 +23,9 @@ const DOMAIN_ERROR_STATUS: Record<string, number> = {
   PASSWORD_TOO_WEAK: HttpStatus.BAD_REQUEST,
   AGENT_NOT_FOUND: HttpStatus.NOT_FOUND,
   AGENT_VERSION_MISSING: HttpStatus.CONFLICT,
-  SERVICE_INSTANCE_NOT_FOUND: HttpStatus.NOT_FOUND
+  SERVICE_INSTANCE_NOT_FOUND: HttpStatus.NOT_FOUND,
+  CONNECTOR_CONNECTION_NOT_FOUND: HttpStatus.NOT_FOUND,
+  CAPABILITY_MISMATCH: HttpStatus.BAD_REQUEST
 };
 
 // Texto de interface, deliberadamente diferente de DomainError.message (que é
@@ -38,7 +40,9 @@ const DOMAIN_ERROR_MESSAGE: Record<string, string> = {
   PASSWORD_TOO_WEAK: "Senha muito curta.",
   AGENT_NOT_FOUND: "Agente não encontrado no catálogo.",
   AGENT_VERSION_MISSING: "Esta instância usa uma versão do agente que não está mais disponível.",
-  SERVICE_INSTANCE_NOT_FOUND: "Serviço não encontrado."
+  SERVICE_INSTANCE_NOT_FOUND: "Serviço não encontrado.",
+  CONNECTOR_CONNECTION_NOT_FOUND: "Conexão não encontrada.",
+  CAPABILITY_MISMATCH: "Esta conexão não atende à capability pedida."
 };
 
 const DEFAULT_MESSAGE_BY_STATUS: Record<number, string> = {

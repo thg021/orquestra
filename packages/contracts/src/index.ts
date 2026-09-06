@@ -25,4 +25,6 @@ export type {
   UpdateServiceInstanceRequest,
   ServiceInstanceSummary
 } from "./service-instances";
+export { bindCapabilityRequestSchema } from "./bindings";
+export type { BindCapabilityRequest } from "./bindings";
 

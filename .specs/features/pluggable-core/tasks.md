@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 12 de 25 tasks (T1 a T12 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 13 de 25 tasks (T1 a T13 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -319,9 +319,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Conexão de conector incompatível é recusada nomeando a incompatibilidade
-- [ ] Conexão de outro tenant responde 404, indistinguível de inexistente
-- [ ] Vincular capability já vinculada substitui, sem criar segunda linha
+- [x] Conexão de conector incompatível é recusada nomeando a incompatibilidade
+- [x] Conexão de outro tenant responde 404, indistinguível de inexistente
+- [x] Vincular capability já vinculada substitui, sem criar segunda linha
+
+**Feito em 06/09/2026.** `PUT/DELETE /service-instances/:id/bindings/:capability`. A indistinguibilidade entre "conexão inexistente" e "conexão de outro tenant" vem de graça da RLS — `findConnectorConnectionById` sob `withTenant` já devolve `undefined` nos dois casos, sem checagem extra no código. Seguido o padrão do projeto: `DomainError` nunca ecoa detalhe dinâmico na mensagem de interface (por isso `CAPABILITY_MISMATCH` tem mensagem genérica, não "conector X entrega Y"). 6 testes e2e novos.
 
 ---
 
