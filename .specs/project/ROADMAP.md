@@ -1,0 +1,153 @@
+# Roadmap
+
+**Current Milestone:** M0 — Fundação
+**Status:** Planning
+
+---
+
+## M0 — Fundação
+
+**Goal:** Existe um sistema multitenant que sobe, autentica e isola dados no banco. Nada plugável ainda, mas a base de segurança está provada.
+**Target:** Login funcional, painel vazio, e teste de isolamento verde.
+
+### Features
+
+**Ambiente de desenvolvimento** — PLANNED
+
+- Monorepo pnpm com workspaces (`api`, `web`, pacotes compartilhados)
+- Docker Compose subindo Postgres, Redis, api e web
+- Pipeline local de lint, typecheck e testes
+
+**Persistência multitenant** — PLANNED
+
+- Migrações versionadas
+- Convenção de `tenant_id` e policies de RLS
+- Estabelecimento de contexto de tenant por transação (`SET LOCAL`)
+- Teste de isolamento como gate de segurança
+
+**Identidade e acesso** — PLANNED
+
+- `Tenant`, `User`, `Membership` com papéis (`owner`, `admin`, `operator`)
+- Autenticação e sessão
+- Painel React com shell autenticado
+
+---
+
+## M1 — Núcleo plugável
+
+**Goal:** Um tenant consegue instalar, configurar e conectar um serviço pelo painel — sem executá-lo ainda.
+
+### Features
+
+**Catálogo** — PLANNED
+
+- `AgentDefinition` e `ConnectorDefinition` carregados do código
+- Capabilities como contrato entre agente e conector
+- Listagem do catálogo no painel
+
+**Service instances** — PLANNED
+
+- Ciclo de vida: instalar, ativar, pausar, remover (remoção lógica)
+- Config por instância validada contra `config_schema`
+- Formulário de configuração gerado a partir do schema
+
+**Conexões de conector (cofre de segredos)** — PLANNED
+
+- Envelope encryption conforme ADR-001: DEK por conexão derivada por tenant, KEK via Docker secret, AES-256-GCM com versão de chave
+- `ConnectorConnection` por tenant; API write-only (nenhum endpoint retorna segredo)
+- Fluxo OAuth para fornecedores que suportam; formulário por `auth_schema` para os demais
+- `ConnectorBinding` preenchendo as capabilities exigidas pelo agente
+- Bloqueio de ativação enquanto houver capability não preenchida
+- Revogação e rotação de credencial sem recriar bindings
+- Teste de contenção de segredo (não vaza em log, job, resposta de API)
+
+---
+
+## M2 — Runtime de execução
+
+**Goal:** Um agente roda de verdade: agendado, observável, e capaz de parar para pedir aprovação humana.
+
+### Features
+
+**Motor de execução** — PLANNED
+
+- Fila BullMQ e worker consumindo jobs
+- Execução de grafo LangGraph com checkpointer em Postgres
+- `ServiceRun` e `RunStep` como trilha de auditoria
+
+**Gateway de LLM** — PLANNED
+
+- Chamadas via OpenRouter com modelo configurável por agente
+- Contabilidade de tokens e custo por passo
+
+**Agendamento** — PLANNED
+
+- `Schedule` por instância com cron e timezone
+- Processo `scheduler` enfileirando execuções
+
+**Aprovação humana** — PLANNED
+
+- Interrupt do grafo emitindo `ApprovalRequest`
+- Run em `awaiting_approval` e retomada a partir do checkpoint
+- Fila de aprovações no painel
+
+**Observabilidade** — PLANNED
+
+- Histórico de execuções por instância
+- Streaming de log de execução no painel
+
+---
+
+## M3 — Conectores reais
+
+**Goal:** As integrações que a rotina contábil exige existem e são testadas contra contrato.
+
+### Features
+
+**Conector de email (`gmail`)** — PLANNED
+**Conector de arquivos (`onedrive` via Microsoft Graph)** — PLANNED
+
+- Inclui a validação de viabilidade contra conta Microsoft pessoal (risco conhecido)
+
+**Conector de mensageria (`whatsapp` via adapter MCP)** — PLANNED
+
+- Valida também o caminho genérico de adapters MCP
+
+**Conector de entrega de documentos (`fortes-conecta` via API REST)** — PLANNED
+
+- Inclui a validação de cobertura da API sobre o fluxo de protocolo digital
+
+---
+
+## M4 — Agente contábil (MVP)
+
+**Goal:** O tenant piloto opera pela plataforma. A skill avulsa é aposentada.
+
+### Features
+
+**Regras de negócio contábeis** — PLANNED
+
+- Resolução dos documentos exigidos por categoria de cliente
+- Validação de conteúdo (competência, CNPJ) como função pura
+- Idempotência de envio (`send_receipts`)
+
+**Grafo `accounting-routine`** — PLANNED
+
+- Conferência de folha e conferência fiscal x DAS
+- Preparo de envio com gate de aprovação antes de qualquer efeito externo
+- Envio multicanal por capability
+
+**Migração de dados** — PLANNED
+
+- `clientes.yaml` para a collection `customers`
+- Schedules dos dias 01, 02, 05, 07 e 10
+
+---
+
+## Future Considerations
+
+- Chat com agentes (spec próprio)
+- Billing e limites de gasto por tenant, sobre a contabilidade já coletada
+- Segundo tenant real e onboarding self-service
+- Catálogo de conectores MCP dirigido por manifesto, sem deploy
+- Banco dedicado por tenant para planos com exigência de isolamento físico

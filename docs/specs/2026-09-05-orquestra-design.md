@@ -169,8 +169,11 @@ Toda tabela de dados de tenant carrega `tenant_id` e tem policy de RLS.
 ### Isolamento e segredos
 
 - RLS ativada em todas as tabelas de tenant; testada explicitamente (ver Estratégia de testes).
-- Credenciais em `ConnectorConnection` cifradas em repouso com AES-GCM, chave via variável de ambiente no MVP, com caminho aberto para KMS/Vault.
-- Segredo nunca entra em payload de job, log, `RunStep` ou prompt de LLM. O adapter resolve a credencial no momento da chamada externa.
+- **Segredos de conector seguem o [ADR-001](../adr/001-gestao-de-segredos-de-conectores.md)**: envelope encryption com DEK por conexão derivada por tenant, KEK fora do banco (Docker secret no MVP, KMS/Vault depois), AES-256-GCM com versionamento de chave para rotação incremental.
+- **Write-only na API:** nenhum endpoint retorna um segredo. O painel exibe apenas metadados (últimos quatro caracteres, data de criação, status da última chamada); editar é substituir, nunca visualizar.
+- **O LLM nunca alcança credenciais.** O modelo decide *o quê* fazer; o adapter detém o segredo e executa. Segredo não entra em prompt, payload de job, log, `RunStep` ou mensagem de erro — erros de autenticação do fornecedor são sanitizados antes de virar log. Esta é a defesa contra prompt injection: o agente lê conteúdo não confiável (e-mails, PDFs de cliente) e não pode ser induzido a exfiltrar o que não alcança.
+- **Auditoria de uso sem o valor:** toda utilização de conexão registra qual conexão, qual execução e qual resultado, nunca o segredo. É o que sustenta revogação e resposta a incidente.
+- OAuth é preferido a API key sempre que o fornecedor oferecer — escopo limitado, revogável do lado do fornecedor, e sem credencial digitada em formulário.
 
 ## 6. Contrato de extensão
 
@@ -216,6 +219,7 @@ Duas mudanças de substância em relação ao comportamento atual:
 - **Regras de negócio** — funções puras (resolução dos documentos exigidos por categoria, validação de competência e CNPJ no documento, idempotência de envio), testadas sem LLM e sem I/O.
 - **Adapters** — testados contra contratos de port; cada port tem um fake usado pelos testes de agente.
 - **Grafos** — executados com LLM fake e checkpointer em memória. O teste mais importante do sistema verifica que **nenhum efeito colateral externo ocorre antes da aprovação humana**: o grafo precisa interromper com o `ApprovalRequest` e nenhum adapter de envio pode ter sido chamado até então.
+- **Contenção de segredo** — teste que executa um grafo com uma conexão de credencial conhecida e falha se aquele valor aparecer em qualquer prompt enviado ao LLM fake, payload de job, `RunStep`, log ou resposta da API. A regra do ADR-001 precisa ser sustentada por teste, não por revisão manual, porque cada adapter novo é uma chance de quebrá-la.
 
 ## 9. Fases de entrega
 
