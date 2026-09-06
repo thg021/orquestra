@@ -262,11 +262,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `LoginRequest` recusa e-mail inválido e senha vazia
-- [ ] `MeResponse` expõe usuário, tenant ativo e papel — e nenhum campo de credencial
-- [ ] O envelope de erro tem código estável e mensagem em português
-- [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 8 testes unitários passam (sem exclusão silenciosa)
+- [x] `LoginRequest` recusa e-mail inválido e senha vazia
+- [x] `MeResponse` expõe usuário, tenant ativo e papel — e nenhum campo de credencial
+- [x] O envelope de erro tem código estável e mensagem em português
+- [x] Gate check passa: `pnpm typecheck && pnpm test:unit`
+- [x] Test count: 6 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(contracts): schemas de autenticação`
@@ -517,7 +517,7 @@ T2, T17, T21, T22 ──→ T23
 - [ ] Resposta 401 durante o uso leva ao login, sem exibir erro cru
 - [ ] Erro de rede é distinguido de 401 e não desloga o usuário
 - [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 4 testes unitários passam (sem exclusão silenciosa)
+- [ ] Test count: 6 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(web): base do painel com roteador e cliente de API`
