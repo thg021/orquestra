@@ -38,5 +38,8 @@ describe("superfície pública", () => {
     expect(typeof catalog.isSecret).toBe("function");
     expect(catalog.CAPABILITIES).toContain("file-storage");
     expect(catalog.InvalidDefinitionError).toBeTruthy();
+    expect(typeof catalog.validateCatalog).toBe("function");
+    expect(typeof catalog.toFormSchema).toBe("function");
+    expect(typeof catalog.checkFormSchemaSupport).toBe("function");
   });
 });

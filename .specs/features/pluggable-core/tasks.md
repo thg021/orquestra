@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 1 de 25 tasks (T1 concluída em 06/09/2026)
+**Status:** Em andamento — 2 de 25 tasks (T1, T2 concluídas em 06/09/2026)
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -97,9 +97,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Cada uma das quatro classes de problema tem teste próprio e é reportada nomeando o culpado
-- [ ] O subconjunto suportado do design (texto, enum, número, booleano, lista de texto, objeto de um nível) converte; qualquer outro construto é reprovado
-- [ ] Campos marcados com `secret()` chegam anotados no JSON Schema
+- [x] Cada uma das quatro classes de problema tem teste próprio e é reportada nomeando o culpado
+- [x] O subconjunto suportado do design (texto, enum, número, booleano, lista de texto, objeto de um nível) converte; qualquer outro construto é reprovado
+- [x] Campos marcados com `secret()` chegam anotados no JSON Schema
+
+**Feito em 06/09/2026.** 12 testes novos (31 no pacote). `validateCatalog` revalida chave e versão mesmo em definições que não passaram por `defineAgent`/`defineConnector` — é a última linha de defesa antes do boot. `checkFormSchemaSupport` percorre o JSON Schema derivado e reprova aninhamento de objeto, lista de não-texto e qualquer construto fora do subconjunto (`z.map`, por exemplo).
 
 ---
 
