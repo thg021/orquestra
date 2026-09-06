@@ -21,8 +21,9 @@ describe("loginRequestSchema", () => {
 describe("meResponseSchema", () => {
   it("expõe usuário, tenant ativo e papel", () => {
     const result = meResponseSchema.safeParse({
-      user: { id: "11111111-1111-1111-1111-111111111111", email: "a@b.com" },
-      tenant: { id: "22222222-2222-2222-2222-222222222222", name: "Acme" },
+      // UUID v7 de verdade (versão 7, variante RFC 9562) — é o que newId gera.
+      user: { id: "0192f2b6-7a4c-7c3d-8f2a-9c1b3d4e5f60", email: "a@b.com" },
+      tenant: { id: "0192f2b6-7a4c-7d11-b4e0-1a2b3c4d5e6f", name: "Acme" },
       role: "owner"
     });
     expect(result.success).toBe(true);

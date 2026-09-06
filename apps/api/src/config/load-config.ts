@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 const configSchema = z.object({
-  DATABASE_URL: z.string().url("DATABASE_URL precisa ser uma URL válida"),
-  DATABASE_MIGRATION_URL: z.string().url("DATABASE_MIGRATION_URL precisa ser uma URL válida"),
-  REDIS_URL: z.string().url("REDIS_URL precisa ser uma URL válida"),
+  DATABASE_URL: z.url("DATABASE_URL precisa ser uma URL válida"),
+  DATABASE_MIGRATION_URL: z.url("DATABASE_MIGRATION_URL precisa ser uma URL válida"),
+  REDIS_URL: z.url("REDIS_URL precisa ser uma URL válida"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET precisa ter ao menos 32 caracteres"),
-  API_PORT: z.coerce.number({ invalid_type_error: "API_PORT precisa ser numérica" }).int().positive(),
+  API_PORT: z.coerce.number({ error: "API_PORT precisa ser numérica" }).int().positive(),
   PROCESS_ROLE: z.enum(["api", "worker", "scheduler"])
 });
 

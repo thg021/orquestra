@@ -5,19 +5,23 @@ import { z } from "zod";
 export const roleSchema = z.enum(["owner", "admin", "operator"]);
 export type RoleContract = z.infer<typeof roleSchema>;
 
+// Trim antes de validar o formato: espaço no fim de um e-mail colado é erro do dedo,
+// não intenção. O pipe garante a ordem — normaliza primeiro, valida depois.
+const emailField = z.string().trim().min(1, "E-mail é obrigatório").pipe(z.email("E-mail inválido"));
+
 export const loginRequestSchema = z.object({
-  email: z.string().trim().min(1, "E-mail é obrigatório").email("E-mail inválido"),
+  email: emailField,
   password: z.string().min(1, "Senha é obrigatória")
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
 const authContextSchema = z.object({
   user: z.object({
-    id: z.string().uuid(),
-    email: z.string().email()
+    id: z.uuid(),
+    email: z.email()
   }),
   tenant: z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     name: z.string()
   }),
   role: roleSchema
