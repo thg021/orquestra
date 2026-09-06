@@ -19,11 +19,14 @@ export function assertPasswordPolicy(plain: string): void {
 
 /** Argon2id com sal por usuário embutido no encoding — nenhuma coluna de sal separada. */
 export async function hashPassword(plain: string, options: HashPasswordOptions = {}): Promise<string> {
+  // Passar uma chave com valor `undefined` explícito para o argon2 quebra a validação
+  // interna da lib (ela não trata "undefined" como "use o default") — por isso só
+  // repassamos as chaves que o chamador realmente definiu.
   return argon2.hash(plain, {
     type: argon2.argon2id,
-    memoryCost: options.memoryCost,
-    timeCost: options.timeCost,
-    parallelism: options.parallelism
+    ...(options.memoryCost !== undefined ? { memoryCost: options.memoryCost } : {}),
+    ...(options.timeCost !== undefined ? { timeCost: options.timeCost } : {}),
+    ...(options.parallelism !== undefined ? { parallelism: options.parallelism } : {})
   });
 }
 

@@ -375,12 +375,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Credencial válida cria sessão e devolve o token cru uma única vez
-- [ ] E-mail inexistente e senha errada produzem o mesmo erro, com o mesmo código
-- [ ] E-mail inexistente ainda executa uma verificação contra hash descartável
-- [ ] `logout` invalida a sessão no servidor
-- [ ] Gate check passa: `pnpm check`
-- [ ] Test count: 7 testes de integração passam (sem exclusão silenciosa)
+- [x] Credencial válida cria sessão e devolve o token cru uma única vez
+- [x] E-mail inexistente e senha errada produzem o mesmo erro, com o mesmo código
+- [x] E-mail inexistente ainda executa uma verificação contra hash descartável
+- [x] `logout` invalida a sessão no servidor
+- [x] Gate check passa: `pnpm check`
+- [x] Test count: 7 testes de integração passam (sem exclusão silenciosa)
 
 **Tests:** integration · **Gate:** full
 **Commit:** `feat(api): serviço de autenticação`
