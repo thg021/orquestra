@@ -239,12 +239,12 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: `context7` (API do `argon2`) · Skill: NENHUMA
 
 **Done when:**
-- [ ] Dois hashes da mesma senha diferem entre si (sal por usuário) e ambos verificam
-- [ ] `verifyPassword` devolve falso para senha errada e não lança para hash malformado
-- [ ] A senha em texto claro não aparece no valor retornado nem na mensagem de erro
-- [ ] Parâmetros de custo vêm de argumento, permitindo custo baixo em teste
-- [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 5 testes unitários passam (sem exclusão silenciosa)
+- [x] Dois hashes da mesma senha diferem entre si (sal por usuário) e ambos verificam
+- [x] `verifyPassword` devolve falso para senha errada e não lança para hash malformado
+- [x] A senha em texto claro não aparece no valor retornado nem na mensagem de erro
+- [x] Parâmetros de custo vêm de argumento, permitindo custo baixo em teste
+- [x] Gate check passa: `pnpm typecheck && pnpm test:unit`
+- [x] Test count: 5 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(core): hash de senha com Argon2id`

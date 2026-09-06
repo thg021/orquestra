@@ -56,9 +56,6 @@ importers:
       '@orquestra/db':
         specifier: workspace:*
         version: link:../../packages/db
-      argon2:
-        specifier: ^0.41.1
-        version: 0.41.1
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -128,7 +125,11 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
 
-  packages/core: {}
+  packages/core:
+    dependencies:
+      argon2:
+        specifier: ^0.41.1
+        version: 0.41.1
 
   packages/db:
     dependencies:
