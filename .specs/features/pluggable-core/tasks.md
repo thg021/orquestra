@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 8 de 25 tasks (T1 a T7, T9 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 9 de 25 tasks (T1 a T7, T9, T10 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -254,9 +254,13 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Teste de integração confirma leitura cruzada vazia entre dois tenants nas três tabelas
-- [ ] Regra de lint continua impedindo importar o pool fora de `packages/db`
-- [ ] Listagem padrão de instâncias omite as removidas
+- [x] Teste de integração confirma leitura cruzada vazia entre dois tenants nas três tabelas
+- [x] Regra de lint continua impedindo importar o pool fora de `packages/db`
+- [x] Listagem padrão de instâncias omite as removidas
+
+**Feito em 06/09/2026.** Três repositórios em `packages/db/src/repositories/`, todos passando por `Tx` de `withTenant`/`withoutTenant` — nenhum importa `pool.ts` diretamente. `bindConnectorCapability` usa `ON CONFLICT DO UPDATE` em `(service_instance_id, capability)`: ligar de novo substitui a linha em vez de somar (BIND-02), testado explicitamente. `listBindingsByConnection` já existe pensando na T17 (revogação precisa achar rápido quem depende de uma conexão). 15 testes de integração novos, cobrindo isolamento nas três tabelas, o upsert do binding, e a listagem que omite instância removida.
+
+De passagem: corrigido um aviso de depreciação do TypeScript (`moduleResolution=node10`) que apareceu ao rodar a suíte — `ignoreDeprecations: "5.0"` no `tsconfig.base.json`, sem mudar a resolução de módulo de verdade (o projeto continua CommonJS, incompatível com trocar para `Node16`/`NodeNext` sem uma migração maior).
 
 ---
 

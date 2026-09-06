@@ -9,3 +9,35 @@ export type { Tx } from "./tenant-context";
 // teste) — nunca o Pool em si, que continua só acessível de dentro do pacote.
 export { closeDefaultPool } from "./pool";
 
+export {
+  insertServiceInstance,
+  findServiceInstanceById,
+  listServiceInstances,
+  updateServiceInstance,
+  updateServiceInstanceStatus,
+  removeServiceInstance
+} from "./repositories/service-instances.repository";
+export type {
+  ServiceInstanceRow,
+  InsertServiceInstanceInput,
+  UpdateServiceInstanceInput
+} from "./repositories/service-instances.repository";
+
+export {
+  insertConnectorConnection,
+  findConnectorConnectionById,
+  listConnectorConnections
+} from "./repositories/connector-connections.repository";
+export type {
+  ConnectorConnectionRow,
+  InsertConnectorConnectionInput
+} from "./repositories/connector-connections.repository";
+
+export {
+  bindConnectorCapability,
+  unbindConnectorCapability,
+  listBindingsByInstance,
+  listBindingsByConnection
+} from "./repositories/connector-bindings.repository";
+export type { ConnectorBindingRow, BindConnectorCapabilityInput } from "./repositories/connector-bindings.repository";
+
