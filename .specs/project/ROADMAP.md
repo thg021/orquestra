@@ -104,18 +104,23 @@
 
 ### Features
 
-**Conector de email (`gmail`)** — PLANNED
-**Conector de arquivos (`onedrive` via Microsoft Graph)** — PLANNED
+**Entrada de arquivos (capability `file-storage`)** — PLANNED
 
-- Inclui a validação de viabilidade contra conta Microsoft pessoal (risco conhecido)
+- `platform-upload` — storage da própria plataforma; é o adapter de menor risco, então vem primeiro e destrava o M4
+- `onedrive` — Microsoft Graph API (caminho preferido do tenant piloto)
+- `google-drive` — via adapter MCP; valida também o caminho genérico de MCP
+
+**Conector de email (`gmail`)** — PLANNED
+
+- Serve tanto para notificação quanto como via de entrega de documentos
 
 **Conector de mensageria (`whatsapp` via adapter MCP)** — PLANNED
 
-- Valida também o caminho genérico de adapters MCP
+- Capability opcional: o serviço ativa sem ele
 
 **Conector de entrega de documentos (`fortes-conecta` via API REST)** — PLANNED
 
-- Inclui a validação de cobertura da API sobre o fluxo de protocolo digital
+- API oficial com API key; sem automação de browser
 
 ---
 

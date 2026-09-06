@@ -19,13 +19,16 @@
 | D10 | 2026-09-05 | Fortes Conecta via API REST oficial, não Playwright — remove o browser do sistema | design §7 |
 | D11 | 2026-09-05 | Chat com agentes fica fora do MVP, com spec próprio depois | design §2 |
 | D12 | 2026-09-05 | Identificadores, tabelas e collections em inglês; texto de usuário em português | design §3 |
+| D13 | 2026-09-05 | `file-storage` (entrada) tem três adapters — `onedrive`, `google-drive`, `platform-upload` — e o tenant escolhe um. Nenhum é caminho único. | design §7 |
+| D14 | 2026-09-05 | A saída tem três vias (Fortes Conecta, e-mail, WhatsApp) que coexistem; a escolha é **por destinatário**, resolvida pelo agente a partir do canal em `customers`, não pela configuração da instância. | design §4, §7 |
+| D15 | 2026-09-05 | Capabilities podem ser obrigatórias ou opcionais; um serviço ativa sem os bindings opcionais (ex.: escritório que não usa WhatsApp). | design §4 |
 
 ## Bloqueios e riscos abertos
 
 | # | Risco | Quando resolver |
 |---|---|---|
-| R1 | A conta Microsoft do tenant piloto é pessoal (Outlook.com) e já inviabilizou o conector M365 antes. O acesso a arquivos via Graph API pode não funcionar. | Validar no início do M3, com prova de acesso real antes de construir o adapter completo. Fallback: agente-ponte local atrás do mesmo `FileStoragePort`. |
-| R2 | A API REST do Fortes Conecta pode não cobrir todo o fluxo de protocolo digital que a automação de browser cobria. | Validar cobertura no M3 antes de descartar alternativas. |
+| ~~R1~~ | ~~Graph API com conta Microsoft pessoal pode não funcionar.~~ **Fechado em 2026-09-05** — mitigado por desenho: `file-storage` tem três adapters (`onedrive`, `google-drive`, `platform-upload`). Provar a Graph API no M3 continua valendo, mas não é bloqueante. | — |
+| ~~R2~~ | ~~Cobertura da API do Fortes Conecta.~~ **Fechado em 2026-09-05** — não é risco: há três vias de entrega escolhidas por destinatário; lacuna no Fortes afeta só os clientes daquele canal. | — |
 | R3 | NestJS e BullMQ são escolhas de conveniência ainda não validadas na prática. | Revisáveis na Fase 0 sem impacto no resto do design. |
 | R4 | Reescrever regras hoje implícitas no prompt da skill pode perder comportamento. | Cada regra migrada vira teste antes de virar código (M4). |
 
@@ -36,8 +39,8 @@ _(vazio — preencher conforme a implementação avança)_
 ## Todos
 
 - [ ] Definir a estrutura do monorepo (pacotes e fronteiras) na Fase 0
-- [ ] Validar acesso Graph API com a conta pessoal antes do M3
-- [ ] Levantar a documentação da API do Fortes Conecta e conferir cobertura
+- [ ] Provar a Graph API com a conta pessoal no M3 (não bloqueante — define só qual adapter de `file-storage` o tenant piloto usa)
+- [ ] Levantar a documentação da API do Fortes Conecta ao iniciar o adapter
 - [ ] Extrair as regras de negócio da skill `rotina-contabil` para uma lista de casos de teste antes do M4
 
 ## Ideias adiadas

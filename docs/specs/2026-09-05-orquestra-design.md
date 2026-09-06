@@ -128,7 +128,11 @@ Seis bounded contexts:
 
 **`ConnectorConnection`** — uma credencial autenticada, pertencente ao **tenant** e reutilizável por vários serviços (o tenant autentica a conta Gmail do escritório uma vez só). Segredo cifrado em repouso.
 
-**`ConnectorBinding`** — liga uma `ServiceInstance` a uma `ConnectorConnection`, preenchendo uma capability exigida pelo agente. Um serviço só pode ir para `active` com todas as capabilities exigidas preenchidas.
+**`ConnectorBinding`** — liga uma `ServiceInstance` a uma `ConnectorConnection`, preenchendo uma capability exigida pelo agente. Um serviço só pode ir para `active` com todas as capabilities **obrigatórias** preenchidas.
+
+Uma capability pode ser declarada como obrigatória ou opcional. Isso importa porque um mesmo agente pode ter mais de uma via de saída e nem todo tenant usa todas: o agente contábil entrega documentos por Fortes Conecta, e-mail ou WhatsApp, e um escritório que não use WhatsApp simplesmente não faz o binding de `messaging` — os clientes marcados para esse canal ficam pendentes, sem impedir a ativação do serviço.
+
+**Entrada e saída são capabilities distintas.** `file-storage` é como os documentos *chegam* à plataforma (escolha única do tenant, na configuração do serviço). As capabilities de saída (`document-delivery`, `email`, `messaging`) são como o documento *chega ao destinatário*, e coexistem: a escolha entre elas é **por destinatário**, resolvida pelo agente em tempo de execução a partir do dado de negócio, não pela configuração da instância.
 
 **`Schedule`** — `service_instance_id`, expressão cron, timezone, habilitado. Substitui o cron externo atual.
 
@@ -206,12 +210,18 @@ O agente `accounting-routine` é uma **reescrita**, não um port: a skill é mar
 | Gmail MCP | adapter nativo `gmail` (capability `email`) |
 | `whatsapp-mcp` | adapter MCP `whatsapp` (capability `messaging`) |
 | Fortes Conecta via Playwright | adapter nativo `fortes-conecta` sobre a API REST oficial, com API key (capability `document-delivery`) |
-| pasta local sincronizada do OneDrive | adapter nativo `onedrive` sobre Microsoft Graph (capability `file-storage`) |
+| pasta local sincronizada do OneDrive | capability `file-storage`, com três adapters possíveis (ver abaixo) |
 
 Duas mudanças de substância em relação ao comportamento atual:
 
-1. **Acesso a arquivos deixa de ser local.** A plataforma é hospedada e não tem acesso ao disco do escritório; os arquivos passam a ser lidos via Graph API. Isso precisa ser validado contra o tipo de conta Microsoft do tenant.
-2. **Fortes Conecta deixa de ser automação de browser** e passa a usar a API oficial, o que remove o Playwright do sistema.
+1. **Acesso a arquivos deixa de ser local.** A plataforma é hospedada e não tem acesso ao disco do escritório. A capability `file-storage` tem três adapters, e o tenant escolhe um na configuração do serviço:
+   - `onedrive` — Microsoft Graph API (caminho preferido para o tenant piloto)
+   - `google-drive` — via adapter MCP
+   - `platform-upload` — o tenant sobe os arquivos para o storage da própria plataforma
+
+   Ter três desde o desenho elimina o risco de depender da viabilidade da Graph API com conta Microsoft pessoal: se ela não atender, o serviço funciona pelos outros dois sem mudança no agente.
+
+2. **Fortes Conecta deixa de ser automação de browser** e passa a usar a API oficial, o que remove o Playwright do sistema. E a entrega não depende dele: o agente tem três vias de saída — Fortes Conecta, e-mail e WhatsApp — escolhidas por destinatário conforme o canal registrado em `customers`. Uma lacuna na API do Fortes degrada a experiência daqueles clientes, não do serviço.
 
 ## 8. Estratégia de testes
 
@@ -239,7 +249,7 @@ Duas mudanças de substância em relação ao comportamento atual:
 
 | Risco | Tratamento |
 |---|---|
-| A conta Microsoft do tenant piloto é pessoal (Outlook.com), o que já inviabilizou o conector M365 antes. A Graph API pessoal pode não atender ao acesso a arquivos necessário. | Validar cedo, na Fase 3, com uma prova de acesso real antes de construir o adapter completo. Se falhar, a alternativa é um agente-ponte local instalado no escritório, atrás do mesmo `FileStoragePort` — o design absorve a troca sem mudança no agente. |
-| A API do Fortes Conecta pode não cobrir todo o fluxo de protocolo digital que a automação de browser cobria. | Validar a cobertura da API contra o fluxo atual antes de descartar o caminho alternativo. |
+| ~~A Graph API com conta Microsoft pessoal pode não atender ao acesso a arquivos.~~ **Mitigado por desenho** (2026-09-05). | A capability `file-storage` tem três adapters — `onedrive`, `google-drive` e `platform-upload`. Nenhum é caminho único, então a inviabilidade de um não bloqueia o serviço. Continua valendo provar a Graph API cedo no M3, mas o resultado não é mais bloqueante. |
+| ~~A API do Fortes Conecta pode não cobrir todo o fluxo de protocolo digital.~~ **Não é risco** (2026-09-05). | Há três vias de entrega (Fortes, e-mail, WhatsApp) escolhidas por destinatário. Uma lacuna na API afeta apenas os clientes daquele canal e é contornável trocando o canal do cliente. |
 | Reescrever regras hoje implícitas em prompt pode perder comportamento que só existe na interpretação do agente. | A skill atual e seus `references/` são a especificação de origem; cada regra migrada vira teste antes de virar código. |
 | Custo de LLM sem teto por tenant. | A contabilidade por `RunStep` existe desde a Fase 2; limites de gasto ficam para o billing pós-MVP, mas os dados para impô-los já estarão lá. |
