@@ -148,6 +148,8 @@ Estas nasceram de erro real. Estão aqui para não acontecer de novo.
 
 **Os três projetos de teste rodam em sequência, não em paralelo.** Cada um sobe um Postgres próprio via Testcontainers, e rodar junto satura a memória do Docker. É por isso que `pnpm test` é sequencial. (Descoberto na T17 do M0.)
 
+**Docker Compose cacheia o objeto de secret no daemon quando usa driver `file:`.** Trocar o conteúdo do arquivo no host depois que o container já foi criado não atualiza o secret montado — nem `up -d` nem `--force-recreate` bastam. É preciso `docker compose down` (que remove os secrets) antes de subir de novo. (Descoberto na T5 do M1, testando a KEK ao vivo.)
+
 ---
 
 ## Convenções

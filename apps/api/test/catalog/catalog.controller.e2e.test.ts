@@ -2,6 +2,9 @@ import { describe, it, expect, afterEach } from "vitest";
 import request from "supertest";
 import type { INestApplication } from "@nestjs/common";
 import { bootstrap } from "../../src/bootstrap";
+import { createTestKekDir } from "../support/test-kek";
+
+const KEK_DIR = createTestKekDir();
 
 function baseEnv(): NodeJS.ProcessEnv {
   return {
@@ -10,7 +13,8 @@ function baseEnv(): NodeJS.ProcessEnv {
     REDIS_URL: "redis://localhost:6379",
     SESSION_SECRET: "a".repeat(32),
     API_PORT: "3000",
-    PROCESS_ROLE: "api"
+    PROCESS_ROLE: "api",
+    KEK_DIR
   };
 }
 

@@ -6,7 +6,11 @@ const configSchema = z.object({
   REDIS_URL: z.url("REDIS_URL precisa ser uma URL válida"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET precisa ter ao menos 32 caracteres"),
   API_PORT: z.coerce.number({ error: "API_PORT precisa ser numérica" }).int().positive(),
-  PROCESS_ROLE: z.enum(["api", "worker", "scheduler"])
+  PROCESS_ROLE: z.enum(["api", "worker", "scheduler"]),
+  // Diretório com um arquivo por versão de KEK (nome do arquivo = número da versão).
+  // Nunca uma variável de ambiente com a chave em si — isso vaza em `docker inspect`
+  // e em dump de processo (ADR-001).
+  KEK_DIR: z.string().min(1, "KEK_DIR é obrigatório")
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

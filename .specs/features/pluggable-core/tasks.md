@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 4 de 25 tasks (T1 a T4 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 5 de 25 tasks (T1 a T5 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -160,9 +160,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] KEK montada como Docker secret em arquivo, nunca como variável de ambiente
-- [ ] Ausência, permissão negada ou tamanho inválido encerram o processo nomeando o problema, sem imprimir conteúdo
-- [ ] Mais de uma versão de KEK pode coexistir, indexada por número de versão
+- [x] KEK montada como Docker secret em arquivo, nunca como variável de ambiente
+- [x] Ausência, permissão negada ou tamanho inválido encerram o processo nomeando o problema, sem imprimir conteúdo
+- [x] Mais de uma versão de KEK pode coexistir, indexada por número de versão
+
+**Feito em 06/09/2026.** `loadKeks()` em `packages/core/src/vault/kek.ts` — um arquivo por versão, nome do arquivo é o número da versão (aceita binário cru de 32 bytes ou hex de 64 caracteres). `bootstrap()` chama isso logo após validar o catálogo, antes das migrações. Testado ao vivo no Docker Compose: sem o secret montado, a API recusa subir e reinicia em loop com `InvalidKekError`, sem imprimir nenhum byte da chave; com o secret presente, sobe normal. `docker/secrets/kek/` é gitignorado (só `.gitkeep` versionado).
 
 ---
 

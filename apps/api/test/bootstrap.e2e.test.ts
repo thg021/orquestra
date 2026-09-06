@@ -2,9 +2,13 @@ import { describe, it, expect, afterEach } from "vitest";
 import request from "supertest";
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { Client } from "pg";
+import { InvalidKekError } from "@orquestra/core";
 import { bootstrap } from "../src/bootstrap";
 import { InvalidConfigError } from "../src/config/load-config";
 import { InvalidCatalogError } from "../src/catalog/invalid-catalog.error";
+import { createTestKekDir } from "./support/test-kek";
+
+const KEK_DIR = createTestKekDir();
 
 function baseEnv(databaseUrl: string): NodeJS.ProcessEnv {
   return {
@@ -13,7 +17,8 @@ function baseEnv(databaseUrl: string): NodeJS.ProcessEnv {
     REDIS_URL: "redis://localhost:6379",
     SESSION_SECRET: "a".repeat(32),
     API_PORT: "3000",
-    PROCESS_ROLE: "api"
+    PROCESS_ROLE: "api",
+    KEK_DIR
   };
 }
 
@@ -88,6 +93,24 @@ describe("bootstrap", () => {
     ).rejects.toThrow("postgres indisponível (simulado)");
 
     expect(attempts).toBe(3);
+  });
+
+  it("KEK ausente ou ilegível encerra a inicialização sem tentar migrar", async () => {
+    const env = baseEnv("postgres://ignored");
+    let runMigrationsCalled = false;
+
+    await expect(
+      bootstrap(env, {
+        loadKeksFn: () => {
+          throw new InvalidKekError("KEK simulada ausente para o teste");
+        },
+        runMigrationsFn: async () => {
+          runMigrationsCalled = true;
+        }
+      })
+    ).rejects.toBeInstanceOf(InvalidKekError);
+
+    expect(runMigrationsCalled).toBe(false);
   });
 
   it("catálogo inválido encerra a inicialização sem tentar migrar", async () => {

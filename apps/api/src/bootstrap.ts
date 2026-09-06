@@ -3,6 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import cookieParser from "cookie-parser";
 import { runMigrations, type RunMigrationsOptions } from "@orquestra/db";
 import { validateBuiltinCatalog, type CatalogIssue } from "@orquestra/catalog";
+import { loadKeks, type KekSet } from "@orquestra/core";
 import { AppModule } from "./app.module";
 import { loadConfig, type AppConfig } from "./config/load-config";
 import { HealthService } from "./health/health.service";
@@ -16,12 +17,16 @@ export interface BootstrapOptions {
   retryDelayMs?: number;
   /** Injetável em teste para simular catálogo quebrado sem editar o catálogo real. */
   validateCatalogFn?: () => readonly CatalogIssue[];
+  /** Injetável em teste para simular KEK ausente/ilegível sem tocar disco. */
+  loadKeksFn?: (dirPath: string) => KekSet;
 }
 
 export interface BootstrapResult {
   config: AppConfig;
   /** Ausente quando PROCESS_ROLE não é "api" — nenhuma rota HTTP é registrada. */
   app?: INestApplication;
+  /** Carregada em todo papel de processo — worker e scheduler também custodiam segredo. */
+  kekSet: KekSet;
 }
 
 const DEFAULT_MAX_RETRIES = 30;
@@ -72,6 +77,11 @@ export async function bootstrap(
     throw new InvalidCatalogError(catalogIssues);
   }
 
+  // Também antes das migrações: KEK ilegível não depende de banco, e não faz sentido
+  // preparar a persistência para um processo que não vai conseguir custodiar segredo.
+  const loadKeksFn = options.loadKeksFn ?? loadKeks;
+  const kekSet = loadKeksFn(config.KEK_DIR);
+
   const runMigrationsFn = options.runMigrationsFn ?? runMigrations;
   await runMigrationsWithRetry(
     { connectionString: config.DATABASE_MIGRATION_URL },
@@ -81,7 +91,7 @@ export async function bootstrap(
   );
 
   if (config.PROCESS_ROLE !== "api") {
-    return { config };
+    return { config, kekSet };
   }
 
   const app = await NestFactory.create(AppModule.register(config), { logger: ["error", "warn"] });
@@ -89,5 +99,5 @@ export async function bootstrap(
   app.useGlobalFilters(new ErrorFilter());
   app.get(HealthService).markMigrationsApplied();
 
-  return { config, app };
+  return { config, app, kekSet };
 }

@@ -7,7 +7,8 @@ const validEnv = {
   REDIS_URL: "redis://localhost:6379",
   SESSION_SECRET: "a".repeat(32),
   API_PORT: "3000",
-  PROCESS_ROLE: "api"
+  PROCESS_ROLE: "api",
+  KEK_DIR: "/run/secrets/kek"
 };
 
 describe("loadConfig", () => {
@@ -39,6 +40,20 @@ describe("loadConfig", () => {
 
   it("porta não numérica é recusada", () => {
     expect(() => loadConfig({ ...validEnv, API_PORT: "não-é-porta" })).toThrow(InvalidConfigError);
+  });
+
+  it("KEK_DIR ausente é recusado, nomeando a variável", () => {
+    const rest = { ...validEnv };
+    delete (rest as Partial<typeof validEnv>).KEK_DIR;
+
+    let caught: unknown;
+    try {
+      loadConfig(rest);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InvalidConfigError);
+    expect((caught as InvalidConfigError).variables).toContain("KEK_DIR");
   });
 
   it("URL malformada é recusada", () => {

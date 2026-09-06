@@ -14,4 +14,6 @@ export {
   RateLimitedError,
   UserNotFoundError
 } from "./errors";
+export { loadKeks, InvalidKekError } from "./vault/kek";
+export type { KekSet } from "./vault/kek";
 
