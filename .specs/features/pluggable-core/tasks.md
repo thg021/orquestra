@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 3 de 25 tasks (T1, T2, T3 concluídas em 06/09/2026)
+**Status:** Em andamento — 4 de 25 tasks (T1 a T4 concluídas em 06/09/2026) — US1 fechada
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -140,10 +140,12 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] As duas rotas devolvem o catálogo com JSON Schema embutido
-- [ ] Catálogo inválido encerra o processo com código diferente de zero, listando todos os problemas
-- [ ] Nenhuma consulta a banco participa da resposta do catálogo
-- [ ] `@Inject(Token)` explícito em todo construtor (convenção do M0 em `TESTING.md`)
+- [x] As duas rotas devolvem o catálogo com JSON Schema embutido
+- [x] Catálogo inválido encerra o processo com código diferente de zero, listando todos os problemas
+- [x] Nenhuma consulta a banco participa da resposta do catálogo
+- [x] `@Inject(Token)` explícito em todo construtor (convenção do M0 em `TESTING.md`) — não se aplica: `CatalogController` não tem construtor, de propósito (catálogo é código, não precisa de nada injetado)
+
+**Feito em 06/09/2026.** `validateBuiltinCatalog()` roda logo após `loadConfig`, antes das migrações — catálogo quebrado nem tenta tocar o banco. O teste que prova CAT-05 usa `runMigrationsFn` como stub e nunca sobe um Postgres real, o que já é a prova de que a rota não depende de banco. Fecha a US1.
 
 ---
 

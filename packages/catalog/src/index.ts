@@ -25,3 +25,5 @@ export { googleDrive } from "./connectors/google-drive";
 export { gmail } from "./connectors/gmail";
 export { whatsapp } from "./connectors/whatsapp";
 export { fortesConecta } from "./connectors/fortes-conecta";
+
+export { AGENTS, CONNECTORS, validateBuiltinCatalog } from "./catalog";

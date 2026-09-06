@@ -1,20 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { validateCatalog } from "../src/validate";
-import { accountingRoutine } from "../src/agents/accounting-routine";
-import { platformUpload } from "../src/connectors/platform-upload";
-import { onedrive } from "../src/connectors/onedrive";
-import { googleDrive } from "../src/connectors/google-drive";
-import { gmail } from "../src/connectors/gmail";
-import { whatsapp } from "../src/connectors/whatsapp";
-import { fortesConecta } from "../src/connectors/fortes-conecta";
+import { AGENTS, CONNECTORS, validateBuiltinCatalog } from "../src/catalog";
 
 describe("catálogo real do M1", () => {
-  it("valida sem achados: toda capability exigida pelo agente tem conector", () => {
-    const issues = validateCatalog({
-      agents: [accountingRoutine],
-      connectors: [platformUpload, onedrive, googleDrive, gmail, whatsapp, fortesConecta]
-    });
+  it("carrega o agente contábil e os seis conectores", () => {
+    expect(AGENTS.map((a) => a.key)).toEqual(["accounting-routine"]);
+    expect(CONNECTORS.map((c) => c.key).sort()).toEqual(
+      ["fortes-conecta", "gmail", "google-drive", "onedrive", "platform-upload", "whatsapp"].sort()
+    );
+  });
 
-    expect(issues).toEqual([]);
+  it("valida sem achados: toda capability exigida pelo agente tem conector", () => {
+    expect(validateBuiltinCatalog()).toEqual([]);
   });
 });

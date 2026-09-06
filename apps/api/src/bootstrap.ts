@@ -2,16 +2,20 @@ import type { INestApplication } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import cookieParser from "cookie-parser";
 import { runMigrations, type RunMigrationsOptions } from "@orquestra/db";
+import { validateBuiltinCatalog, type CatalogIssue } from "@orquestra/catalog";
 import { AppModule } from "./app.module";
 import { loadConfig, type AppConfig } from "./config/load-config";
 import { HealthService } from "./health/health.service";
 import { ErrorFilter } from "./common/error.filter";
+import { InvalidCatalogError } from "./catalog/invalid-catalog.error";
 
 export interface BootstrapOptions {
   /** Injetável em teste para simular indisponibilidade do Postgres sem um banco real. */
   runMigrationsFn?: (options: RunMigrationsOptions) => Promise<void>;
   maxMigrationRetries?: number;
   retryDelayMs?: number;
+  /** Injetável em teste para simular catálogo quebrado sem editar o catálogo real. */
+  validateCatalogFn?: () => readonly CatalogIssue[];
 }
 
 export interface BootstrapResult {
@@ -49,7 +53,10 @@ async function runMigrationsWithRetry(
 }
 
 /**
- * Ordem fixa: loadConfig → migrações (com retry) → cria o app (só no papel "api").
+ * Ordem fixa: loadConfig → catálogo → migrações (com retry) → cria o app (só no papel
+ * "api"). A validação do catálogo vem antes de tocar o banco de propósito — CAT-05
+ * exige que a resposta do catálogo não dependa de banco, e falhar antes das migrações
+ * evita reboot em loop tentando migrar um catálogo que nunca vai subir de qualquer jeito.
  * Nunca abre a porta aqui — quem faz `listen` é main.ts, para que este bootstrap
  * permaneça testável sem subir um servidor de verdade.
  */
@@ -58,6 +65,12 @@ export async function bootstrap(
   options: BootstrapOptions = {}
 ): Promise<BootstrapResult> {
   const config = loadConfig(env);
+
+  const validateCatalogFn = options.validateCatalogFn ?? validateBuiltinCatalog;
+  const catalogIssues = validateCatalogFn();
+  if (catalogIssues.length > 0) {
+    throw new InvalidCatalogError(catalogIssues);
+  }
 
   const runMigrationsFn = options.runMigrationsFn ?? runMigrations;
   await runMigrationsWithRetry(

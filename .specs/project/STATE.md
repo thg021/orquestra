@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 3/25 tasks (T1, T2, T3 concluídas em 2026-09-06)
+**Fase atual:** M1 — Núcleo plugável em execução; 4/25 tasks (T1 a T4 concluídas em 2026-09-06) — US1 (Catálogo) fechada
 
 ## Decisões
 

@@ -7,4 +7,11 @@ export {
 export type { RoleContract, LoginRequest, LoginResponse, MeResponse } from "./auth";
 export { errorEnvelopeSchema } from "./error";
 export type { ErrorEnvelope } from "./error";
+export {
+  agentSummarySchema,
+  connectorSummarySchema,
+  catalogAgentsResponseSchema,
+  catalogConnectorsResponseSchema
+} from "./catalog";
+export type { AgentSummary, ConnectorSummary } from "./catalog";
 
