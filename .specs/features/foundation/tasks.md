@@ -217,11 +217,11 @@ T2, T17, T21, T22 ──→ T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `newId()` produz UUID v7 válido e monotônico dentro do mesmo milissegundo
-- [ ] `hasAtLeast(role, required)` respeita `owner > admin > operator`
-- [ ] Erros de domínio carregam código estável, sem texto de UI
-- [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 6 testes unitários passam (sem exclusão silenciosa)
+- [x] `newId()` produz UUID v7 válido e monotônico dentro do mesmo milissegundo
+- [x] `hasAtLeast(role, required)` respeita `owner > admin > operator`
+- [x] Erros de domínio carregam código estável, sem texto de UI
+- [x] Gate check passa: `pnpm typecheck && pnpm test:unit`
+- [x] Test count: 8 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(core): identificadores, papéis e erros de domínio`
@@ -266,7 +266,7 @@ T2, T17, T21, T22 ──→ T23
 - [ ] `MeResponse` expõe usuário, tenant ativo e papel — e nenhum campo de credencial
 - [ ] O envelope de erro tem código estável e mensagem em português
 - [ ] Gate check passa: `pnpm typecheck && pnpm test:unit`
-- [ ] Test count: 4 testes unitários passam (sem exclusão silenciosa)
+- [ ] Test count: 8 testes unitários passam (sem exclusão silenciosa)
 
 **Tests:** unit · **Gate:** quick
 **Commit:** `feat(contracts): schemas de autenticação`
