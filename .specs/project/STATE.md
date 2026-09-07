@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 17/25 tasks (T1 a T17 concluídas em 2026-09-06) — US1 e US4 fechadas; US2 com backend pronto, falta o painel
+**Fase atual:** M1 — Núcleo plugável em execução; 18/25 tasks (T1 a T18 concluídas em 2026-09-06) — US1 e US4 fechadas; US2 com backend pronto, falta o painel
 
 ## Decisões
 

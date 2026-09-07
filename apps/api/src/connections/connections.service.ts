@@ -8,6 +8,7 @@ import {
   listConnectorConnections,
   updateConnectorConnectionSecret,
   revokeConnectorConnection,
+  updateConnectorConnectionCheck,
   findServiceInstanceById,
   updateServiceInstanceStatus,
   listBindingsByConnection,
@@ -164,6 +165,16 @@ export async function revokeConnection(tenantId: string, id: string): Promise<Co
     }
   });
 
+  return getConnection(tenantId, id);
+}
+
+/**
+ * Verificação (T18, CHK-01/CHK-02) — no M1 sempre grava `unverified`, atrás da mesma
+ * interface que o adapter real do M3 vai preencher (sem mudar rota nem DTO).
+ */
+export async function checkConnection(tenantId: string, id: string): Promise<ConnectorConnectionRow> {
+  await getConnection(tenantId, id);
+  await withTenant(tenantId, (tx) => updateConnectorConnectionCheck(id, "unverified", tx));
   return getConnection(tenantId, id);
 }
 

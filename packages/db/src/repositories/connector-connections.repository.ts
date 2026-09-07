@@ -104,6 +104,14 @@ export async function revokeConnectorConnection(id: string, tx: Tx): Promise<voi
     .where(eq(connectorConnections.id, id));
 }
 
+/** Verificação (T18, CHK-01/CHK-02) — grava resultado e data; a chamada real ao fornecedor entra no M3. */
+export async function updateConnectorConnectionCheck(id: string, status: string, tx: Tx): Promise<void> {
+  await tx
+    .update(connectorConnections)
+    .set({ lastCheckStatus: status, lastCheckAt: new Date(), updatedAt: new Date() })
+    .where(eq(connectorConnections.id, id));
+}
+
 export async function listConnectorConnections(tx: Tx): Promise<ConnectorConnectionRow[]> {
   const rows = await tx.select().from(connectorConnections);
   return rows as ConnectorConnectionRow[];

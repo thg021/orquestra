@@ -284,6 +284,28 @@ describe("ConnectionsController", () => {
     expect(stillActive.body.status).toBe("active");
   });
 
+  it("check grava unverified e a data, e ela aparece na listagem (T18)", async () => {
+    const { cookie } = await seedOwner();
+    const created = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "platform-upload", name: `Conexão ${randomUUID()}`, auth: { apiKey: "chave-check" } });
+    expect(created.body.lastCheckStatus).toBe("unverified");
+    expect(created.body.lastCheckAt).toBeNull();
+
+    const checked = await request(app.getHttpServer())
+      .post(`/connections/${created.body.id}/check`)
+      .set("Cookie", cookie);
+    expect(checked.status).toBe(200);
+    expect(checked.body.lastCheckStatus).toBe("unverified");
+    expect(checked.body.lastCheckAt).not.toBeNull();
+
+    const list = await request(app.getHttpServer()).get("/connections").set("Cookie", cookie);
+    const listed = list.body.find((c: { id: string }) => c.id === created.body.id);
+    expect(listed.lastCheckStatus).toBe("unverified");
+    expect(listed.lastCheckAt).toBe(checked.body.lastCheckAt);
+  });
+
   it("operator recebe 403 ao criar, e 200 ao listar", async () => {
     const { tenantId } = await seedOwner();
     const { cookie: operatorCookie } = await seedOperatorInTenant(tenantId);

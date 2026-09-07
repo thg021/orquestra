@@ -29,7 +29,8 @@ export {
   findConnectorConnectionByName,
   listConnectorConnections,
   updateConnectorConnectionSecret,
-  revokeConnectorConnection
+  revokeConnectorConnection,
+  updateConnectorConnectionCheck
 } from "./repositories/connector-connections.repository";
 export type {
   ConnectorConnectionRow,

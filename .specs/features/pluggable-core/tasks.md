@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 17 de 25 tasks (T1 a T17 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
+**Status:** Em andamento — 18 de 25 tasks (T1 a T18 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -415,9 +415,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Responde `unverified` distinguindo-o de falha de credencial
-- [ ] Data da última verificação é registrada e devolvida na listagem
-- [ ] A interface é a mesma que um adapter real preencherá, sem mudança de rota nem de DTO
+- [x] Responde `unverified` distinguindo-o de falha de credencial
+- [x] Data da última verificação é registrada e devolvida na listagem
+- [x] A interface é a mesma que um adapter real preencherá, sem mudança de rota nem de DTO
+
+**Feito em 06/09/2026.** `POST /connections/:id/check` grava `unverified` + `lastCheckAt`. `lastCheckStatus` já nascia `unverified` na criação (T16) — o M3 só precisa trocar o corpo de `checkConnection` por uma chamada real ao fornecedor; rota e DTO não mudam.
 
 ---
 

@@ -9,7 +9,8 @@ import {
   findConnectorConnectionByName,
   listConnectorConnections,
   updateConnectorConnectionSecret,
-  revokeConnectorConnection
+  revokeConnectorConnection,
+  updateConnectorConnectionCheck
 } from "../src/repositories/connector-connections.repository";
 import { startTestDatabase, type TestDatabase } from "./support/test-database";
 
@@ -200,5 +201,33 @@ describe("connector-connections.repository", () => {
     const found = await withTenant(tenantA, (tx) => findConnectorConnectionById(id, tx), pool);
     expect(found?.status).toBe("revoked");
     expect(found?.revokedAt).not.toBeNull();
+  });
+
+  it("updateCheck grava status e data da última verificação", async () => {
+    const id = randomUUID();
+    await withTenant(
+      tenantA,
+      (tx) =>
+        insertConnectorConnection(
+          {
+            id,
+            tenantId: tenantA,
+            connectorKey: "platform-upload",
+            name: "conexão-a-verificar",
+            secretEnvelope: randomBytes(20),
+            dekEnvelope: randomBytes(20),
+            keyVersion: 1,
+            last4: "0000"
+          },
+          tx
+        ),
+      pool
+    );
+
+    await withTenant(tenantA, (tx) => updateConnectorConnectionCheck(id, "unverified", tx), pool);
+
+    const found = await withTenant(tenantA, (tx) => findConnectorConnectionById(id, tx), pool);
+    expect(found?.lastCheckStatus).toBe("unverified");
+    expect(found?.lastCheckAt).not.toBeNull();
   });
 });

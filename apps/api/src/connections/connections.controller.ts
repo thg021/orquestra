@@ -22,7 +22,13 @@ import { RequireRole } from "../auth/role.guard";
 import { Protected } from "../auth/protected.decorator";
 import { getFullAuthContext } from "../auth/auth-context";
 import { VAULT } from "./connections.constants";
-import { installConnection, listAllConnections, replaceConnectionSecret, revokeConnection } from "./connections.service";
+import {
+  installConnection,
+  listAllConnections,
+  replaceConnectionSecret,
+  revokeConnection,
+  checkConnection
+} from "./connections.service";
 import { toConnectionSummary } from "./to-summary";
 
 /** `owner`/`admin` escrevem; `operator` só lê — mesma convenção do resto do M1. */
@@ -74,5 +80,14 @@ export class ConnectionsController {
     const { tenantId } = getFullAuthContext(req);
     const revoked = await revokeConnection(tenantId, id);
     return toConnectionSummary(revoked);
+  }
+
+  @Post(":id/check")
+  @RequireRole("admin")
+  @HttpCode(HttpStatus.OK)
+  async check(@Param("id") id: string, @Req() req: Request): Promise<ConnectionSummary> {
+    const { tenantId } = getFullAuthContext(req);
+    const checked = await checkConnection(tenantId, id);
+    return toConnectionSummary(checked);
   }
 }
