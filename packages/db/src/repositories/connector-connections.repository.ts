@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { connectorConnections } from "../schema/service-management";
 import type { Tx } from "../tenant-context";
 
@@ -54,6 +54,20 @@ export async function findConnectorConnectionById(
   tx: Tx
 ): Promise<ConnectorConnectionRow | undefined> {
   const rows = await tx.select().from(connectorConnections).where(eq(connectorConnections.id, id)).limit(1);
+  return rows[0] as ConnectorConnectionRow | undefined;
+}
+
+/** Checagem de duplicidade antes de cifrar (T16) — casa o índice único da tabela. */
+export async function findConnectorConnectionByName(
+  connectorKey: string,
+  name: string,
+  tx: Tx
+): Promise<ConnectorConnectionRow | undefined> {
+  const rows = await tx
+    .select()
+    .from(connectorConnections)
+    .where(and(eq(connectorConnections.connectorKey, connectorKey), eq(connectorConnections.name, name)))
+    .limit(1);
   return rows[0] as ConnectorConnectionRow | undefined;
 }
 

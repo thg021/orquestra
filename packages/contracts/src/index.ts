@@ -27,4 +27,10 @@ export type {
 } from "./service-instances";
 export { bindCapabilityRequestSchema } from "./bindings";
 export type { BindCapabilityRequest } from "./bindings";
+export {
+  createConnectionRequestSchema,
+  connectionSummarySchema,
+  listConnectionsResponseSchema
+} from "./connections";
+export type { CreateConnectionRequest, ConnectionSummary } from "./connections";
 

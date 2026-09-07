@@ -6,6 +6,7 @@ import { withTenant, withoutTenant } from "../src/tenant-context";
 import {
   insertConnectorConnection,
   findConnectorConnectionById,
+  findConnectorConnectionByName,
   listConnectorConnections
 } from "../src/repositories/connector-connections.repository";
 import { startTestDatabase, type TestDatabase } from "./support/test-database";
@@ -91,5 +92,41 @@ describe("connector-connections.repository", () => {
   it("sem contexto de tenant, list() devolve vazio", async () => {
     const rows = await withoutTenant((tx) => listConnectorConnections(tx), pool);
     expect(rows).toHaveLength(0);
+  });
+
+  it("findByName acha por (tenant, connectorKey, name) e ignora nome igual em outro conector", async () => {
+    const id = randomUUID();
+    await withTenant(
+      tenantA,
+      (tx) =>
+        insertConnectorConnection(
+          {
+            id,
+            tenantId: tenantA,
+            connectorKey: "whatsapp",
+            name: "conta-principal",
+            secretEnvelope: randomBytes(20),
+            dekEnvelope: randomBytes(20),
+            keyVersion: 1,
+            last4: "1234"
+          },
+          tx
+        ),
+      pool
+    );
+
+    const found = await withTenant(
+      tenantA,
+      (tx) => findConnectorConnectionByName("whatsapp", "conta-principal", tx),
+      pool
+    );
+    expect(found?.id).toBe(id);
+
+    const notFoundOtherConnector = await withTenant(
+      tenantA,
+      (tx) => findConnectorConnectionByName("gmail", "conta-principal", tx),
+      pool
+    );
+    expect(notFoundOtherConnector).toBeUndefined();
   });
 });

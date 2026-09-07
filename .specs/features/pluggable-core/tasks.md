@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 15 de 25 tasks (T1 a T15 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
+**Status:** Em andamento — 16 de 25 tasks (T1 a T16 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -375,10 +375,12 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] O tipo do DTO de resposta não tem campo de segredo — ausência no tipo, não omissão em runtime
-- [ ] Metadados não secretos ficam legíveis em `metadata`; só os marcados vão ao cofre
-- [ ] Falha após a cifragem não deixa conexão parcialmente gravada
-- [ ] Nome duplicado no mesmo conector é recusado antes de qualquer cifragem
+- [x] O tipo do DTO de resposta não tem campo de segredo — ausência no tipo, não omissão em runtime
+- [x] Metadados não secretos ficam legíveis em `metadata`; só os marcados vão ao cofre
+- [x] Falha após a cifragem não deixa conexão parcialmente gravada
+- [x] Nome duplicado no mesmo conector é recusado antes de qualquer cifragem
+
+**Feito em 06/09/2026.** `POST/GET /connections`. Usa `connector.secretFields`/`metadataFields` (já existiam em `defineConnector`) para separar o que vai cifrado do que fica em `metadata` — os campos secretos viram um JSON cifrado de uma vez só (`vault.seal`), e o `last4` vem do primeiro campo secreto declarado no conector. Duplicidade de nome é checada com uma consulta antes de chamar o cofre (`findConnectorConnectionByName`, nova no repositório), então nunca cifra à toa. O `Vault` passou a nascer uma única vez em `AppModule.register`, via um provider Nest (`token VAULT`, `apps/api/src/connections/connections.constants.ts`) que embrulha o `createVault(kekSet)` já carregado no boot — é o primeiro lugar do M1 em que o cofre entra em código HTTP, e não só no CLI de rotação.
 
 ---
 

@@ -26,6 +26,7 @@ export type {
 export {
   insertConnectorConnection,
   findConnectorConnectionById,
+  findConnectorConnectionByName,
   listConnectorConnections
 } from "./repositories/connector-connections.repository";
 export type {

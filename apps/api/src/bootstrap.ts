@@ -94,7 +94,7 @@ export async function bootstrap(
     return { config, kekSet };
   }
 
-  const app = await NestFactory.create(AppModule.register(config), { logger: ["error", "warn"] });
+  const app = await NestFactory.create(AppModule.register(config, kekSet), { logger: ["error", "warn"] });
   app.use(cookieParser());
   app.useGlobalFilters(new ErrorFilter());
   app.get(HealthService).markMigrationsApplied();

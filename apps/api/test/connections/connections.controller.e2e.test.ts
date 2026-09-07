@@ -1,0 +1,182 @@
+import { randomUUID } from "node:crypto";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import type { INestApplication } from "@nestjs/common";
+import request from "supertest";
+import { closeDefaultPool, withoutTenant, identitySchema } from "@orquestra/db";
+import { hashPassword, newId } from "@orquestra/core";
+import { bootstrap } from "../../src/bootstrap";
+import { createTenantWithOwner } from "../../src/identity/identity.repository";
+import { createSession } from "../../src/auth/session.repository";
+import { SESSION_COOKIE_NAME } from "../../src/auth/session.guard";
+import { startTestDatabase, type TestDatabase } from "../support/test-database";
+import { createTestKekDir } from "../support/test-kek";
+
+const PASSWORD = "senha-correta-123";
+const PASSWORD_COST = { memoryCost: 1024, timeCost: 2, parallelism: 1 };
+const KEK_DIR = createTestKekDir();
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+function baseEnv(databaseUrl: string): NodeJS.ProcessEnv {
+  return {
+    DATABASE_URL: databaseUrl,
+    DATABASE_MIGRATION_URL: databaseUrl,
+    REDIS_URL: "redis://localhost:6379",
+    SESSION_SECRET: "a".repeat(32),
+    API_PORT: "3000",
+    PROCESS_ROLE: "api",
+    KEK_DIR
+  };
+}
+
+function cookieHeader(token: string): string {
+  return `${SESSION_COOKIE_NAME}=${token}`;
+}
+
+describe("ConnectionsController", () => {
+  let db: TestDatabase;
+  let app: INestApplication;
+  let seedCounter = 0;
+
+  async function seedOwner(): Promise<{ tenantId: string; cookie: string }> {
+    seedCounter += 1;
+    const passwordHash = await hashPassword(PASSWORD, PASSWORD_COST);
+    const created = await createTenantWithOwner({
+      tenantName: `Tenant ${seedCounter}`,
+      email: `owner${seedCounter}@exemplo.com`,
+      passwordHash
+    });
+    const session = await createSession({ userId: created.userId, tenantId: created.tenantId, ttlMs: ONE_DAY_MS });
+    return { tenantId: created.tenantId, cookie: cookieHeader(session.token) };
+  }
+
+  async function seedOperatorInTenant(tenantId: string): Promise<{ cookie: string }> {
+    const passwordHash = await hashPassword(PASSWORD, PASSWORD_COST);
+    const userId = newId();
+    await withoutTenant(async (tx) => {
+      await tx.insert(identitySchema.users).values({
+        id: userId,
+        email: `operator-${userId}@exemplo.com`,
+        passwordHash
+      });
+      await tx.insert(identitySchema.memberships).values({ id: newId(), tenantId, userId, role: "operator" });
+    });
+    const session = await createSession({ userId, tenantId, ttlMs: ONE_DAY_MS });
+    return { cookie: cookieHeader(session.token) };
+  }
+
+  beforeAll(async () => {
+    db = await startTestDatabase();
+    const env = baseEnv(db.ownerUrl);
+    env.DATABASE_URL = db.appUrl;
+    process.env.DATABASE_URL = db.appUrl;
+
+    const result = await bootstrap(env);
+    app = result.app!;
+    await app.init();
+  }, 180_000);
+
+  afterAll(async () => {
+    await app.close();
+    await closeDefaultPool();
+    await db.close();
+  });
+
+  it("cria conexão separando segredo (cofre) de metadado, e a resposta não tem campo de segredo", async () => {
+    const { cookie } = await seedOwner();
+
+    const response = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({
+        connectorKey: "whatsapp",
+        name: `Conexão ${randomUUID()}`,
+        auth: { accessToken: "token-secreto-9999", phoneNumberId: "5511999999999" }
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.metadata).toEqual({ phoneNumberId: "5511999999999" });
+    expect(response.body.last4).toBe("9999");
+    expect(response.body).not.toHaveProperty("auth");
+    expect(response.body).not.toHaveProperty("secretEnvelope");
+    expect(response.body).not.toHaveProperty("dekEnvelope");
+    expect(JSON.stringify(response.body)).not.toContain("token-secreto-9999");
+  });
+
+  it("lista conexões do tenant, sem segredo em nenhuma delas", async () => {
+    const { cookie } = await seedOwner();
+    await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "platform-upload", name: `Conexão ${randomUUID()}`, auth: { apiKey: "chave-abc123" } });
+
+    const response = await request(app.getHttpServer()).get("/connections").set("Cookie", cookie);
+
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBeGreaterThan(0);
+    expect(JSON.stringify(response.body)).not.toContain("chave-abc123");
+  });
+
+  it("connectorKey inexistente recebe 404 CONNECTOR_NOT_FOUND", async () => {
+    const { cookie } = await seedOwner();
+
+    const response = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "nao-existe", name: "X", auth: {} });
+
+    expect(response.status).toBe(404);
+    expect(response.body.code).toBe("CONNECTOR_NOT_FOUND");
+  });
+
+  it("nome duplicado no mesmo conector é recusado (409), sem duplicar a linha", async () => {
+    const { cookie } = await seedOwner();
+    const name = `Conexão ${randomUUID()}`;
+
+    const first = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "platform-upload", name, auth: { apiKey: "chave-primeira" } });
+    expect(first.status).toBe(201);
+
+    const second = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "platform-upload", name, auth: { apiKey: "chave-segunda" } });
+
+    expect(second.status).toBe(409);
+    expect(second.body.code).toBe("CONNECTION_NAME_DUPLICATE");
+
+    const list = await request(app.getHttpServer()).get("/connections").set("Cookie", cookie);
+    expect(list.body.filter((c: { name: string }) => c.name === name)).toHaveLength(1);
+  });
+
+  it("auth inválida (campo de segredo ausente) recebe 422 com os campos", async () => {
+    const { cookie } = await seedOwner();
+
+    const response = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "platform-upload", name: `Conexão ${randomUUID()}`, auth: {} });
+
+    expect(response.status).toBe(422);
+    expect(response.body.code).toBe("AUTH_INVALID");
+    expect(response.body.fields).toEqual(
+      expect.arrayContaining([expect.objectContaining({ path: "apiKey" })])
+    );
+  });
+
+  it("operator recebe 403 ao criar, e 200 ao listar", async () => {
+    const { tenantId } = await seedOwner();
+    const { cookie: operatorCookie } = await seedOperatorInTenant(tenantId);
+
+    const createAttempt = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", operatorCookie)
+      .send({ connectorKey: "platform-upload", name: `Conexão ${randomUUID()}`, auth: { apiKey: "chave-op" } });
+    expect(createAttempt.status).toBe(403);
+    expect(createAttempt.body.code).toBe("INSUFFICIENT_ROLE");
+
+    const listAttempt = await request(app.getHttpServer()).get("/connections").set("Cookie", operatorCookie);
+    expect(listAttempt.status).toBe(200);
+  });
+});

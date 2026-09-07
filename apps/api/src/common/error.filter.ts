@@ -26,7 +26,9 @@ const DOMAIN_ERROR_STATUS: Record<string, number> = {
   AGENT_VERSION_MISSING: HttpStatus.CONFLICT,
   SERVICE_INSTANCE_NOT_FOUND: HttpStatus.NOT_FOUND,
   CONNECTOR_CONNECTION_NOT_FOUND: HttpStatus.NOT_FOUND,
-  CAPABILITY_MISMATCH: HttpStatus.BAD_REQUEST
+  CAPABILITY_MISMATCH: HttpStatus.BAD_REQUEST,
+  CONNECTOR_NOT_FOUND: HttpStatus.NOT_FOUND,
+  CONNECTION_NAME_DUPLICATE: HttpStatus.CONFLICT
 };
 
 // Texto de interface, deliberadamente diferente de DomainError.message (que é
@@ -43,7 +45,9 @@ const DOMAIN_ERROR_MESSAGE: Record<string, string> = {
   AGENT_VERSION_MISSING: "Esta instância usa uma versão do agente que não está mais disponível.",
   SERVICE_INSTANCE_NOT_FOUND: "Serviço não encontrado.",
   CONNECTOR_CONNECTION_NOT_FOUND: "Conexão não encontrada.",
-  CAPABILITY_MISMATCH: "Esta conexão não atende à capability pedida."
+  CAPABILITY_MISMATCH: "Esta conexão não atende à capability pedida.",
+  CONNECTOR_NOT_FOUND: "Conector não encontrado no catálogo.",
+  CONNECTION_NAME_DUPLICATE: "Já existe uma conexão com esse nome para este conector."
 };
 
 const DEFAULT_MESSAGE_BY_STATUS: Record<number, string> = {
