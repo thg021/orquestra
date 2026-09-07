@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 13 de 25 tasks (T1 a T13 concluídas em 06/09/2026) — US1 fechada
+**Status:** Em andamento — 14 de 25 tasks (T1 a T14 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -338,9 +338,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Ativação recusada devolve 409 com a lista de impedimentos codificada
-- [ ] Ativa com capabilities opcionais vazias
-- [ ] Pausar preserva config e vínculos, e reativar volta a passar pelo gate
+- [x] Ativação recusada devolve 409 com a lista de impedimentos codificada
+- [x] Ativa com capabilities opcionais vazias
+- [x] Pausar preserva config e vínculos, e reativar volta a passar pelo gate
+
+**Feito em 06/09/2026.** `POST /service-instances/:id/{activate,pause}`. `evaluateInstanceActivation` é a ponte entre dados reais (catálogo, config, bindings, status da conexão) e o gate puro da T12 — nunca cacheia um resultado "já passou uma vez": cada chamada de `activate` reconstrói a entrada do zero e reavalia. `ErrorFilter` ganhou o mesmo tratamento de `fields` para `impediments`. Fecha a US4 (Ligar as conexões e travar ativação incompleta) — pode ir pra Revisão na Asana. A US2 (Instalar e configurar) ainda não fecha: o backend está pronto desde a T11, mas ela depende também do painel (T19-T21), que é fase separada do plano. 5 testes e2e novos, incluindo o cenário mais importante: desvincular uma capability obrigatória depois de pausar bloqueia a reativação, provando que o gate roda de novo a cada chamada.
 
 ---
 

@@ -12,12 +12,7 @@ import {
   Req
 } from "@nestjs/common";
 import type { Request } from "express";
-import type { ServiceInstanceRow } from "@orquestra/db";
-import {
-  createServiceInstanceRequestSchema,
-  updateServiceInstanceRequestSchema,
-  type ServiceInstanceSummary
-} from "@orquestra/contracts";
+import { createServiceInstanceRequestSchema, updateServiceInstanceRequestSchema, type ServiceInstanceSummary } from "@orquestra/contracts";
 import { Protected } from "../auth/protected.decorator";
 import { RequireRole } from "../auth/role.guard";
 import { getFullAuthContext } from "../auth/auth-context";
@@ -28,20 +23,7 @@ import {
   updateServiceInstanceById,
   removeServiceInstanceById
 } from "./service-instances.service";
-
-function toSummary(row: ServiceInstanceRow): ServiceInstanceSummary {
-  return {
-    id: row.id,
-    agentKey: row.agentKey,
-    agentVersion: row.agentVersion,
-    name: row.name,
-    config: row.config,
-    status: row.status,
-    statusReason: row.statusReason,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString()
-  };
-}
+import { toServiceInstanceSummary as toSummary } from "./to-summary";
 
 /**
  * `owner`/`admin` escrevem; `operator` só lê (RequireRole vs Protected) — regra da

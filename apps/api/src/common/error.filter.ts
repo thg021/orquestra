@@ -11,6 +11,7 @@ interface ErrorBody {
   code: string;
   message: string;
   fields?: FieldError[];
+  impediments?: Record<string, unknown>[];
 }
 
 const DOMAIN_ERROR_STATUS: Record<string, number> = {
@@ -87,6 +88,21 @@ function extractFieldErrors(payload: unknown): FieldError[] | undefined {
 }
 
 /**
+ * Mesma lógica de `fields`, para o gate de ativação (T14): só exige que cada item
+ * tenha um `code` — os demais campos variam por impedimento (`fields`, `capabilities`)
+ * e o gate (`packages/core`) já é a fonte de verdade do formato de cada um.
+ */
+function extractImpediments(payload: unknown): Record<string, unknown>[] | undefined {
+  if (typeof payload !== "object" || payload === null || !("impediments" in payload)) return undefined;
+  const impediments = (payload as Record<string, unknown>).impediments;
+  if (!Array.isArray(impediments)) return undefined;
+  return impediments.filter(
+    (item): item is Record<string, unknown> =>
+      typeof item === "object" && item !== null && typeof (item as { code?: unknown }).code === "string"
+  );
+}
+
+/**
  * Único ponto de tradução de erro → resposta HTTP. Nunca deixa passar mensagem crua de
  * exceção não mapeada — erro inesperado vira sempre o mesmo envelope genérico, com o
  * detalhe real só no log do servidor (nunca hash, SQL, string de conexão ou token).
@@ -115,7 +131,10 @@ export class ErrorFilter implements ExceptionFilter {
         DEFAULT_MESSAGE_BY_STATUS[status] ??
         "Não foi possível processar a requisição.";
       const fields = extractFieldErrors(payload);
-      const body: ErrorBody = fields ? { code, message, fields } : { code, message };
+      const impediments = extractImpediments(payload);
+      const body: ErrorBody = { code, message };
+      if (fields) body.fields = fields;
+      if (impediments) body.impediments = impediments;
       response.status(status).json(body);
       return;
     }
