@@ -25,8 +25,12 @@ export type {
   UpdateServiceInstanceRequest,
   ServiceInstanceSummary
 } from "./service-instances";
-export { bindCapabilityRequestSchema } from "./bindings";
-export type { BindCapabilityRequest } from "./bindings";
+export {
+  bindCapabilityRequestSchema,
+  connectorBindingSummarySchema,
+  listBindingsResponseSchema
+} from "./bindings";
+export type { BindCapabilityRequest, ConnectorBindingSummary } from "./bindings";
 export {
   createConnectionRequestSchema,
   replaceConnectionSecretRequestSchema,

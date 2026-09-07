@@ -1,14 +1,31 @@
 export const API_BASE_URL = "/api";
 
+export interface ApiFieldError {
+  path: string;
+  message: string;
+}
+
 export class ApiError extends Error {
   public readonly status: number;
   public readonly code: string;
+  /** Presente em 422 de validação (T20) — um item por campo inválido. */
+  public readonly fields?: ApiFieldError[];
+  /** Presente em 409 de ativação bloqueada (T21) — o que falta para ativar. */
+  public readonly impediments?: Record<string, unknown>[];
 
-  constructor(status: number, code: string, message: string) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    fields?: ApiFieldError[],
+    impediments?: Record<string, unknown>[]
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
+    this.fields = fields;
+    this.impediments = impediments;
   }
 }
 
@@ -29,6 +46,8 @@ export interface ApiFetchOptions extends Omit<RequestInit, "body"> {
 interface ErrorPayload {
   code?: string;
   message?: string;
+  fields?: ApiFieldError[];
+  impediments?: Record<string, unknown>[];
 }
 
 /**
@@ -63,7 +82,9 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     throw new ApiError(
       response.status,
       errorPayload?.code ?? "UNKNOWN_ERROR",
-      errorPayload?.message ?? "Não foi possível processar a requisição."
+      errorPayload?.message ?? "Não foi possível processar a requisição.",
+      errorPayload?.fields,
+      errorPayload?.impediments
     );
   }
 

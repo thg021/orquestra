@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 18 de 25 tasks (T1 a T18 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
+**Status:** Em andamento — 21 de 25 tasks (T1 a T21 concluídas em 06/09/2026) — US1, US2 e US4 fechadas
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -434,9 +434,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Cards mostram capabilities exigidas, distinguindo obrigatória de opcional
-- [ ] Instalar leva à instância recém-criada
-- [ ] Nenhum componente conhece um agente específico
+- [x] Cards mostram capabilities exigidas, distinguindo obrigatória de opcional
+- [x] Instalar leva à instância recém-criada
+- [x] Nenhum componente conhece um agente específico
+
+**Feito em 06/09/2026.** Implementado junto com T20, na ordem inversa da doc (T20 primeiro): o formulário de instalação já precisa do `SchemaForm` para preencher a config do agente (`accounting-routine` exige `signature`/`defaultDeadline`), então construir T19 sem T20 pronto teria significado escrever um formulário provisório e jogar fora depois. `CatalogRoute` busca `GET /catalog/agents` e renderiza um card por item — nada no componente sabe o nome de um agente específico, só itera campos genéricos (`title`, `description`, `capabilities`, `configSchema`). Roteamento também mudou: `router.tsx` passou a usar rotas aninhadas (`AppRoute` com `<Outlet/>`) em vez do catch-all `/*` de antes.
 
 ---
 
@@ -451,9 +453,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Todos os construtos do subconjunto renderizam, com teste por tipo de campo
-- [ ] Campo marcado como secreto renderiza mascarado e nunca recebe valor do servidor
-- [ ] Erros do servidor (422) aparecem ao lado dos campos correspondentes
+- [x] Todos os construtos do subconjunto renderizam, com teste por tipo de campo
+- [x] Campo marcado como secreto renderiza mascarado e nunca recebe valor do servidor
+- [x] Erros do servidor (422) aparecem ao lado dos campos correspondentes
+
+**Feito em 06/09/2026.** `SchemaForm` cobre exatamente o subconjunto que `checkFormSchemaSupport` (T2) garante na subida: texto, enum (`<select>`), número, booleano (`<input type="checkbox">`), lista de texto (`<textarea>`, uma linha por item). Campo com `secret: true` no JSON Schema sempre nasce com `value=""` — o componente nem lê `values[campo]` nesse caso, então não há como um valor do servidor vazar pro input mesmo que alguém errasse e mandasse um. `fieldErrors` casa por `path` igual ao nome da propriedade (mesma convenção do `FieldError` da API) e aparece como `<p role="alert">` ao lado do campo. `ApiError` (client.ts) ganhou `fields`/`impediments` opcionais pra carregar isso e os impedimentos do gate (T21) sem precisar de um tipo por rota.
 
 ---
 
@@ -468,9 +472,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Cada capability aparece com seu vínculo atual e a marcação de obrigatória
-- [ ] Recusa de ativação vira lista nomeada, com link para a aba onde se resolve
-- [ ] Configuração salva sobrevive a recarregar a página
+- [x] Cada capability aparece com seu vínculo atual e a marcação de obrigatória
+- [x] Recusa de ativação vira lista nomeada, com link para a aba onde se resolve
+- [x] Configuração salva sobrevive a recarregar a página
+
+**Feito em 06/09/2026.** Faltava uma rota no backend para o painel saber o vínculo atual de cada capability — `GET /service-instances/:id/bindings` foi adicionada (pequena extensão de T14/T10, não estava na spec original), reaproveitando `listBindingsByInstance` que já existia desde T10. A aba Conexões cruza essa lista com `GET /catalog/connectors` (pra filtrar as conexões compatíveis com cada capability) e `GET /connections` (pra mostrar o nome). Recusa de ativação (409, `impediments`) vira uma lista com um botão "Resolver" por item, que troca pra aba certa (`CONFIG_INVALID` → Configuração; os demais → Conexões) — sem link de rota de verdade porque as abas são estado local, não URL. "Sobrevive a recarregar" é garantido pela mesma via de sempre: `Salvar` grava no servidor (`PATCH`) e a tela sempre lê de `GET /service-instances/:id`, nunca de estado otimista — um F5 de verdade repete exatamente essa leitura.
 
 ---
 

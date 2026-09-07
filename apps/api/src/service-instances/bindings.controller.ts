@@ -1,13 +1,22 @@
-import { BadRequestException, Body, Controller, Delete, HttpCode, HttpStatus, Param, Put, Req } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Put, Req } from "@nestjs/common";
 import type { Request } from "express";
-import { bindCapabilityRequestSchema } from "@orquestra/contracts";
+import { bindCapabilityRequestSchema, type ConnectorBindingSummary } from "@orquestra/contracts";
+import { Protected } from "../auth/protected.decorator";
 import { RequireRole } from "../auth/role.guard";
 import { getFullAuthContext } from "../auth/auth-context";
-import { bindCapability, unbindCapability } from "./bindings.service";
+import { bindCapability, unbindCapability, listBindings } from "./bindings.service";
 
-/** `owner`/`admin` escrevem — mesma regra do resto de service-instances. */
+/** `owner`/`admin` escrevem; `operator` só lê — mesma regra do resto de service-instances. */
 @Controller("service-instances/:id/bindings")
 export class BindingsController {
+  @Get()
+  @Protected()
+  async list(@Param("id") serviceInstanceId: string, @Req() req: Request): Promise<ConnectorBindingSummary[]> {
+    const { tenantId } = getFullAuthContext(req);
+    const rows = await listBindings(tenantId, serviceInstanceId);
+    return rows.map((row) => ({ capability: row.capability, connectionId: row.connectionId }));
+  }
+
   @Put(":capability")
   @RequireRole("admin")
   async bind(

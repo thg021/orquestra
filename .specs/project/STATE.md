@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 18/25 tasks (T1 a T18 concluídas em 2026-09-06) — US1 e US4 fechadas; US2 com backend pronto, falta o painel
+**Fase atual:** M1 — Núcleo plugável em execução; 21/25 tasks (T1 a T21 concluídas em 2026-09-06) — US1, US2 e US4 fechadas
 
 ## Decisões
 
@@ -37,6 +37,8 @@
 | D34 | 2026-09-06 | AAD do envelope da DEK inclui a versão de KEK; AAD do envelope do segredo não inclui — a DEK nunca muda numa rotação de KEK, então seu AAD não pode depender de uma versão que muda sem ela. Refina o design §Cofre, que descrevia um único AAD uniforme. | T6 |
 | D35 | 2026-09-06 | Índice único parcial (`where removed_at is null`) em `service_instances(tenant_id, name)` — nome de instância removida fica livre para reuso, sem exigir troca de nome | T9 |
 | D36 | 2026-09-06 | `Vault` nasce uma única vez por processo, via provider Nest (token `VAULT`) criado em `AppModule.register(config, kekSet)` a partir do `KekSet` já carregado no boot — primeira vez que o cofre entra em código HTTP (antes só o CLI de rotação usava `createVault`) | T16 |
+| D37 | 2026-09-06 | `GET /service-instances/:id/bindings` — rota que a spec não previa; o painel (T21) precisa saber o vínculo atual de cada capability e não havia como perguntar isso à API. Reaproveita `listBindingsByInstance` (T10) | T21 |
+| D38 | 2026-09-06 | Roteamento do painel trocou o catch-all `/*` → `AppRoute` por rotas aninhadas de verdade (`AppRoute` com `<Outlet/>`, filhas `catalog` e `service-instances/:id`) — precisava de mais de uma tela dentro do shell autenticado | T19 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |

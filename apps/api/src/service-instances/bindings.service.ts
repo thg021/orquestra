@@ -1,8 +1,21 @@
 import { BadRequestException } from "@nestjs/common";
 import { CONNECTORS, isCapability } from "@orquestra/catalog";
-import { withTenant, bindConnectorCapability, unbindConnectorCapability, findConnectorConnectionById } from "@orquestra/db";
+import {
+  withTenant,
+  bindConnectorCapability,
+  unbindConnectorCapability,
+  findConnectorConnectionById,
+  listBindingsByInstance,
+  type ConnectorBindingRow
+} from "@orquestra/db";
 import { getServiceInstance } from "./service-instances.service";
 import { ConnectorConnectionNotFoundError, CapabilityMismatchError } from "./errors";
+
+/** Serve à aba "Conexões" do painel (T21) — o vínculo atual de cada capability. */
+export async function listBindings(tenantId: string, serviceInstanceId: string): Promise<ConnectorBindingRow[]> {
+  await getServiceInstance(tenantId, serviceInstanceId);
+  return withTenant(tenantId, (tx) => listBindingsByInstance(serviceInstanceId, tx));
+}
 
 /**
  * Liga uma capability da instância a uma conexão — só aceita conexão cujo conector

@@ -120,6 +120,24 @@ describe("BindingsController", () => {
     await db.close();
   });
 
+  it("GET lista os vínculos atuais da instância (T21)", async () => {
+    const { tenantId, cookie } = await seedOwner();
+    const instanceId = await seedInstance(tenantId, cookie);
+    const connectionId = await seedConnection(tenantId, "platform-upload");
+
+    await request(app.getHttpServer())
+      .put(`/service-instances/${instanceId}/bindings/file-storage`)
+      .set("Cookie", cookie)
+      .send({ connectionId });
+
+    const response = await request(app.getHttpServer())
+      .get(`/service-instances/${instanceId}/bindings`)
+      .set("Cookie", cookie);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([{ capability: "file-storage", connectionId }]);
+  });
+
   it("liga uma capability a uma conexão compatível", async () => {
     const { tenantId, cookie } = await seedOwner();
     const instanceId = await seedInstance(tenantId, cookie);
