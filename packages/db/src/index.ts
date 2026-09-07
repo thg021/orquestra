@@ -47,3 +47,19 @@ export {
 } from "./repositories/connector-bindings.repository";
 export type { ConnectorBindingRow, BindConnectorCapabilityInput } from "./repositories/connector-bindings.repository";
 
+export {
+  insertServiceRun,
+  findServiceRunById,
+  listServiceRunsByInstance,
+  transitionServiceRunStatus,
+  IllegalRunTransitionError
+} from "./repositories/service-runs.repository";
+export type {
+  ServiceRunRow,
+  InsertServiceRunInput,
+  TransitionServiceRunStatusOptions
+} from "./repositories/service-runs.repository";
+
+export { insertRunStep, listRunSteps, sumRunCost } from "./repositories/run-steps.repository";
+export type { RunStepRow, InsertRunStepInput } from "./repositories/run-steps.repository";
+

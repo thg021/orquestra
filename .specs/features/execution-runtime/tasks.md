@@ -3,7 +3,7 @@
 **Design:** `.specs/features/execution-runtime/design.md`
 **Spec:** `.specs/features/execution-runtime/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 1 de 29 tasks (T1 concluída em 07/09/2026)
+**Status:** Em andamento — 2 de 29 tasks (T1 e T2 concluídas em 07/09/2026)
 
 29 tasks. Uma entrega por task, com teste co-locado.
 
@@ -114,10 +114,12 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Transição de status é explícita: a função recusa ir de um estado final para outro estado
-- [ ] Passos saem na ordem em que aconteceram
-- [ ] Custo do run é a soma dos passos, calculada no banco e não em memória
-- [ ] Isolamento: run de outro tenant não aparece na listagem nem por id
+- [x] Transição de status é explícita: a função recusa ir de um estado final para outro estado
+- [x] Passos saem na ordem em que aconteceram
+- [x] Custo do run é a soma dos passos, calculada no banco e não em memória
+- [x] Isolamento: run de outro tenant não aparece na listagem nem por id
+
+**Feito em 07/09/2026.** `transitionServiceRunStatus` usa `UPDATE ... WHERE status NOT IN (final)` como guarda atômica — sem janela entre ler e escrever, sem SELECT antes do UPDATE. Zero linha afetada e o run existe → estava num estado final; lança `IllegalRunTransitionError`. Entrar em `running` grava `startedAt`; entrar em `succeeded`/`failed` grava `finishedAt`. `sumRunCost` soma no banco com `coalesce(sum(...), 0)` — run sem passo nenhum devolve `0`, nunca `null`, porque quem consome esse número não deveria ter que checar por `null` antes de somar.
 
 ---
 
