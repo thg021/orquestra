@@ -28,4 +28,5 @@ export type {
 } from "./activation-gate";
 export { encodeEnvelope, decodeEnvelope, InvalidEnvelopeError } from "./vault/envelope";
 export type { DecodedEnvelope } from "./vault/envelope";
+export { computeNextRunAt, InvalidCronExpressionError } from "./scheduling/cron";
 

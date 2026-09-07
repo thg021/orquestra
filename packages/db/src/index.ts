@@ -63,3 +63,26 @@ export type {
 export { insertRunStep, listRunSteps, sumRunCost } from "./repositories/run-steps.repository";
 export type { RunStepRow, InsertRunStepInput } from "./repositories/run-steps.repository";
 
+export {
+  createApprovalRequest,
+  findApprovalRequestById,
+  decideApprovalRequest,
+  AlreadyDecidedError
+} from "./repositories/approval-requests.repository";
+export type { ApprovalRequestRow, CreateApprovalRequestInput } from "./repositories/approval-requests.repository";
+
+export {
+  insertDeliveryReceipt,
+  findDeliveryReceipts,
+  DuplicateDeliveryError
+} from "./repositories/delivery-receipts.repository";
+export type { InsertDeliveryReceiptInput } from "./repositories/delivery-receipts.repository";
+
+export {
+  upsertSchedule,
+  findScheduleByInstance,
+  deleteSchedule,
+  claimDueSchedules
+} from "./repositories/schedules.repository";
+export type { ScheduleRow, UpsertScheduleInput } from "./repositories/schedules.repository";
+

@@ -3,7 +3,7 @@
 **Design:** `.specs/features/execution-runtime/design.md`
 **Spec:** `.specs/features/execution-runtime/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 2 de 29 tasks (T1 e T2 concluídas em 07/09/2026)
+**Status:** Em andamento — 3 de 29 tasks (T1 a T3 concluídas em 07/09/2026)
 
 29 tasks. Uma entrega por task, com teste co-locado.
 
@@ -134,9 +134,13 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Decidir uma aprovação já decidida não sobrescreve a primeira decisão
-- [ ] Gravar recibo com chave repetida é recusado pelo banco, não por checagem em memória
-- [ ] `claimDueSchedules` reivindica com `UPDATE ... RETURNING` e avança `next_run_at` a partir de agora
+- [x] Decidir uma aprovação já decidida não sobrescreve a primeira decisão
+- [x] Gravar recibo com chave repetida é recusado pelo banco, não por checagem em memória
+- [x] `claimDueSchedules` reivindica com `UPDATE ... RETURNING` e avança `next_run_at` a partir de agora
+
+**Feito em 07/09/2026.** `decideApprovalRequest` e `insertDeliveryReceipt` seguem o mesmo padrão da T2: guarda atômica no `WHERE`/na unicidade do banco, nunca checagem em memória antes de escrever. `claimDueSchedules` varre todo tenant (como o `kek:rotate` do M1) — reivindicação é `UPDATE ... WHERE next_run_at <= now` por linha, então dois schedulers concorrentes nunca reivindicam a mesma: a segunda transação vê o valor já avançado pela primeira e o `WHERE` falha. `next_run_at` é recalculado a partir de `now`, nunca da janela perdida (design D-decisão "next_run_at a partir de agora").
+
+**Dependência nova:** `cron-parser` (em `packages/core`), para calcular a próxima ocorrência de uma expressão cron respeitando fuso horário. Sem ela, `computeNextRunAt` teria que reimplementar aritmética de calendário — risco alto de acertar o caso comum e errar borda de DST/mudança de mês.
 
 ---
 
