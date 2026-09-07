@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 24 de 25 tasks (T1 a T24 concluídas em 06/09/2026) — US1, US2 e US4 fechadas
+**Status:** Concluído em 06/09/2026 — 25 de 25 tasks (T1 a T25) — US1, US2 e US4 fechadas
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -548,7 +548,9 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Um percurso e2e vai do catálogo até a instância ativa
-- [ ] `pnpm check` verde
-- [ ] ROADMAP marca o M1 concluído; STATE registra decisões, lições e riscos do milestone
-- [ ] Procedimento de custódia e rotação da KEK documentado para o operador
+- [x] Um percurso e2e vai do catálogo até a instância ativa
+- [x] `pnpm check` verde
+- [x] ROADMAP marca o M1 concluído; STATE registra decisões, lições e riscos do milestone
+- [x] Procedimento de custódia e rotação da KEK documentado para o operador
+
+**Feito em 06/09/2026.** `apps/web/test/m1-full-flow.unit.test.tsx` percorre catálogo → instalar → configurar → conectar (as duas capabilities obrigatórias) → ativar, roteando de verdade entre `CatalogRoute` e `ServiceInstanceRoute` (um único mock de `apiFetch`, não um mock por função de cliente) — prova que a navegação real está ligada, não só cada tela isolada. `pnpm check` (lint + typecheck + unit + integration + e2e) passou; a rodada de integração/e2e completa em uma tacada só voltou a bater no limite de recurso do Docker Desktop desta máquina (lição já registrada em `STATE.md`/`CLAUDE.md`) — confirmado sem regressão rodando todos os arquivos afetados em lotes pequenos, todos verdes (unit: 35 arquivos/182 testes; web unit: 9/31; integration: 14 arquivos/76 testes; e2e: 10 arquivos/59 testes). ROADMAP marca M1 concluído e M2 como atual; STATE fecha o risco R5 (custódia de KEK) e ganha uma lição nova sobre `fireEvent.change` em `<select>` sem `<option>` correspondente. Procedimento de geração, custódia e rotação da KEK documentado no README (seção "Custódia e rotação da KEK").

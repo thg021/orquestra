@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 24/25 tasks (T1 a T24 concluídas em 2026-09-06) — US1, US2 e US4 fechadas
+**Fase atual:** M1 — Núcleo plugável concluído em 2026-09-06 (25/25 tasks, T1 a T25) — US1, US2 e US4 fechadas. Próximo: M2 — Runtime de execução.
 
 ## Decisões
 
@@ -55,7 +55,7 @@
 | ~~R2~~ | ~~Cobertura da API do Fortes Conecta.~~ **Fechado em 2026-09-05** — não é risco: há três vias de entrega escolhidas por destinatário; lacuna no Fortes afeta só os clientes daquele canal. | — |
 | R3 | NestJS e BullMQ são escolhas de conveniência ainda não validadas na prática. | Revisáveis na Fase 0 sem impacto no resto do design. |
 | R4 | Reescrever regras hoje implícitas no prompt da skill pode perder comportamento. | Cada regra migrada vira teste antes de virar código (M4). |
-| R5 | Perder a KEK torna todo segredo de conector irrecuperável. | Custódia e rotação viram procedimento escrito no M1 (T25), e `kek:rotate` é provado em teste antes de existir credencial real. |
+| ~~R5~~ | ~~Perder a KEK torna todo segredo de conector irrecuperável.~~ **Fechado em 2026-09-06** — procedimento de geração/custódia/rotação documentado no README (T25); `kek:rotate` provado em `kek-rotate.int.test.ts` desde T8. O risco de perda em si não desaparece (é inerente ao desenho), mas o operador agora tem o passo a passo escrito antes de existir credencial real em produção. | — |
 | R6 | O subconjunto de JSON Schema do formulário pode ficar apertado para um agente futuro. | `validateCatalog` reprova na subida, em desenvolvimento — a pressão aparece cedo e barata (M1 T2). |
 
 ## Lições
@@ -72,6 +72,7 @@
 - **Zod 4 valida UUID pela RFC de verdade.** O fixture `11111111-1111-1111-1111-111111111111` passava no Zod 3 e é recusado no Zod 4: o nibble de versão e o de variante não batem com a RFC 9562. IDs reais (v7, do `newId`) passam normalmente — o teste é que estava frouxo. Ao escrever fixture de UUID, use um v7 de verdade. Descoberto na migração da T1.
 - **`import.meta` não compila sob o `module: CommonJS` do projeto.** Teste que precisa do próprio caminho resolve a partir de `process.cwd()` (o Vitest roda da raiz do monorepo). Descoberto na T1.
 - **`tsx` (esbuild) resolve `tsconfig.json` com `extends` relativo subindo diretórios** — então o Dockerfile precisa copiar `tsconfig.base.json` da raiz, não só o pacote sendo buildado, senão decorators quebram silenciosamente (mesma causa-raiz do primeiro item, manifestada de outro jeito). Descoberto em T23.
+- **`fireEvent.change` num `<select>` do Testing Library não seleciona um valor que não existe como `<option>`.** `event.target.value` fica vazio (não o valor pedido) se nenhuma opção corresponder — silencioso, sem erro, só um teste que nunca dispara o `onChange` esperado. Ao testar um `<select>` populado dinamicamente (ex.: conexões compatíveis com uma capability), garanta que o mock de dados inclui uma opção com o valor que o teste vai selecionar. Descoberto em T25.
 - **Pacotes do workspace com `main` apontando para `./src/index.ts`** (sem build) funcionam bem sob bundler (Vite) e sob runtime com transpilação on-the-fly (tsx), mas quebram sob `node` puro contra `dist/`. A API roda em produção via `tsx` no M0 (ambiente de desenvolvimento é o alvo declarado do milestone); virar isso num build real de produção fica para quando M0 sair de escopo dev.
 
 ## Todos
