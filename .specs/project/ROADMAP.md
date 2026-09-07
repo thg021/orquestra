@@ -1,7 +1,7 @@
 # Roadmap
 
 **Current Milestone:** M2 — Runtime de execução
-**Status:** Planejado — M1 concluído em 2026-09-06
+**Status:** Especificado — spec em `.specs/features/execution-runtime/`; M1 concluído em 2026-09-06
 
 ---
 
@@ -73,36 +73,54 @@
 
 ## M2 — Runtime de execução ◄ atual
 
+**Spec:** `.specs/features/execution-runtime/`
 **Goal:** Um agente roda de verdade: agendado, observável, e capaz de parar para pedir aprovação humana.
 
 ### Features
 
-**Motor de execução** — PLANNED
+**Motor de execução** — SPECIFIED
 
 - Fila BullMQ e worker consumindo jobs
 - Execução de grafo LangGraph com checkpointer em Postgres
 - `ServiceRun` e `RunStep` como trilha de auditoria
 
-**Gateway de LLM** — PLANNED
-
-- Chamadas via OpenRouter com modelo configurável por agente
-- Contabilidade de tokens e custo por passo
-
-**Agendamento** — PLANNED
-
-- `Schedule` por instância com cron e timezone
-- Processo `scheduler` enfileirando execuções
-
-**Aprovação humana** — PLANNED
+**Aprovação humana** — SPECIFIED
 
 - Interrupt do grafo emitindo `ApprovalRequest`
 - Run em `awaiting_approval` e retomada a partir do checkpoint
 - Fila de aprovações no painel
+- Aprovação vale só para aquela rodada; gate reavaliado na retomada
 
-**Observabilidade** — PLANNED
+**Plano de entrega** — SPECIFIED
 
-- Histórico de execuções por instância
-- Streaming de log de execução no painel
+- Entrega como primitiva do runtime, não lógica de agente (D40)
+- Lista de itens `{destinatário, capability, mensagem, anexos, chave de idempotência}` — é o payload do `ApprovalRequest`
+- Entrega item a item: falha de um não derruba os outros; rodar de novo não reenvia o que já foi
+- Resultado por item como `RunStep`
+
+**Leitura estruturada de documento** — SPECIFIED
+
+- Extração de texto local; visão como exceção para PDF sem camada de texto (D43)
+- Saída estruturada validada por schema: tipo, CNPJ, nome, vencimento, competência (D42)
+- Triagem por conteúdo, aposentando o prefixo de nome de arquivo
+- Conteúdo de documento é dado, nunca comando (prompt injection)
+
+**Gateway de LLM** — SPECIFIED
+
+- Chamadas via OpenRouter com modelo configurável por agente
+- Contabilidade de tokens e custo por passo
+
+**Agendamento** — SPECIFIED
+
+- `Schedule` por instância com cron e timezone
+- Processo `scheduler` enfileirando execuções
+- Uma execução por janela; janelas perdidas não disparam em rajada
+
+**Observabilidade** — SPECIFIED
+
+- Histórico de execuções por instância, com detalhe por passo e por item entregue
+- Custo da execução visível
+- Streaming de log ao vivo ficou fora do M2 (conforto, não requisito)
 
 ---
 
