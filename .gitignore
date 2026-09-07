@@ -4,6 +4,8 @@ build/
 .env
 .env.*
 !.env.example
+docker/secrets/kek/*
+!docker/secrets/kek/.gitkeep
 *.log
 .DS_Store
 coverage/

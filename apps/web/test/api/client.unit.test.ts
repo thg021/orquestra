@@ -51,6 +51,20 @@ describe("apiFetch", () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
+  it("carrega fields/impediments do corpo do erro, quando presentes (T20/T21)", async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockJsonResponse(422, {
+        code: "CONFIG_INVALID",
+        message: "Configuração inválida.",
+        fields: [{ path: "signature", message: "Obrigatório" }]
+      })
+    );
+
+    const error = await apiFetch("/service-instances", { method: "POST", body: {} }).catch((caught) => caught);
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).fields).toEqual([{ path: "signature", message: "Obrigatório" }]);
+  });
+
   it("erro de rede é distinguido de 401 e não desloga o usuário", async () => {
     global.fetch = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
     const handler = vi.fn();

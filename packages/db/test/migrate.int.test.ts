@@ -60,11 +60,15 @@ describe("runMigrations", () => {
     const client = new Client({ connectionString: db.ownerUrl });
     await client.connect();
     try {
+      // Restrito a memberships/sessions de propósito: o teste prova as FKs de
+      // identidade do M0, não a contagem total de FKs do banco — tabelas do M1
+      // (connector_bindings) legitimamente têm FK também, e não devem quebrar isto.
       const { rows } = await client.query<{ table_name: string; count: string }>(
         `select tc.table_name, count(*)::text as count
          from information_schema.table_constraints tc
          where tc.constraint_type = 'FOREIGN KEY'
            and tc.table_schema = 'public'
+           and tc.table_name in ('memberships', 'sessions')
          group by tc.table_name
          order by tc.table_name`
       );

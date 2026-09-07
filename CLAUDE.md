@@ -53,7 +53,19 @@ Arquivos que mandam:
 | `.specs/features/<nome>/design.md` | como vai ser construído |
 | `.specs/features/<nome>/tasks.md` | as tarefas, uma entrega cada, com dependências |
 | `.specs/codebase/TESTING.md` | como os testes rodam |
+| `.specs/codebase/PRINCIPLES.md` | princípios de código: fronteiras, domínio, TDD, segurança |
+| `.specs/codebase/stacks/` | padrões por stack — leia o da stack que você vai tocar |
 | `docs/adr/` | decisões difíceis de reverter, com as alternativas descartadas |
+
+Antes de escrever código, leia o documento da stack que vai tocar:
+
+```
+  backend, API, NestJS . . . . .  .specs/codebase/stacks/backend-nestjs.md
+  painel, React, Vite  . . . . .  .specs/codebase/stacks/frontend-react.md
+  banco, migração, RLS . . . . .  .specs/codebase/stacks/data-drizzle-postgres.md
+  teste . . . . . . . . . . . .   .specs/codebase/stacks/testing-vitest.md
+  qualquer um deles  . . . . . .  .specs/codebase/PRINCIPLES.md
+```
 
 Board da Asana: projeto **Orquestra**, workspace My Company.
 
@@ -135,6 +147,12 @@ Estas nasceram de erro real. Estão aqui para não acontecer de novo.
 **Nenhuma mensagem de erro ou log carrega senha, token, chave ou string de conexão.** Erro de driver é limpo antes de virar log.
 
 **Os três projetos de teste rodam em sequência, não em paralelo.** Cada um sobe um Postgres próprio via Testcontainers, e rodar junto satura a memória do Docker. É por isso que `pnpm test` é sequencial. (Descoberto na T17 do M0.)
+
+**`drizzle-kit` 0.28 não gera `FORCE ROW LEVEL SECURITY` — só `ENABLE`.** Toda tabela nova sob RLS precisa da linha `ALTER TABLE ... FORCE ROW LEVEL SECURITY;` acrescentada à mão na migração gerada. Sem isso, o teste de introspecção de RLS reprova nomeando a tabela. (Redescoberto na T9 do M1 — já valia desde o M0.)
+
+**`pnpm run test:int` completo pode falhar por falta de recurso no Docker, não por regressão.** Se vários arquivos falharem juntos sem relação óbvia entre si, rode os arquivos afetados em lotes pequenos antes de assumir que quebrou algo — nenhum container órfão sobra depois, é só contenção de memória/CPU. (Descoberto na T11 do M1.)
+
+**Docker Compose cacheia o objeto de secret no daemon quando usa driver `file:`.** Trocar o conteúdo do arquivo no host depois que o container já foi criado não atualiza o secret montado — nem `up -d` nem `--force-recreate` bastam. É preciso `docker compose down` (que remove os secrets) antes de subir de novo. (Descoberto na T5 do M1, testando a KEK ao vivo.)
 
 ---
 

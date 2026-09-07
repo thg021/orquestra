@@ -129,8 +129,8 @@ bytes 13..28  tag de autenticação GCM (128 bits)
 bytes 29..    ciphertext
 ```
 
-- **Dado associado (AAD):** `tenant_id ‖ connection_id ‖ key_version` entra como AAD do GCM. Mover uma linha cifrada de um tenant para outro no banco não a torna decifrável — a autenticação falha.
-- **Notas:** só `node:crypto`, sem dependência nova. A KEK é lida do caminho em `KEK_FILE` na subida; ausência derruba o processo (edge case declarado). O módulo nunca inclui plaintext em mensagem de erro, e um teste garante isso.
+- **Dado associado (AAD) — não é uniforme, e a diferença importa (D34):** o envelope da **DEK** usa `tenant_id ‖ connection_id ‖ key_version`; o envelope do **segredo** usa só `tenant_id ‖ connection_id`, sem a versão. A DEK em si nunca muda numa rotação de KEK — só a chave que a envelopa muda — então o AAD do segredo (cifrado pela DEK, não pela KEK) não pode depender de uma versão que muda sem ele: se dependesse, `rewrapDek` (T7) teria que recifrar o segredo também, quebrando a promessa de "sem tocar o `secret_envelope`". Em ambos os casos, mover uma linha cifrada de um tenant para outro no banco não a torna decifrável — a autenticação falha.
+- **Notas:** só `node:crypto`, sem dependência nova. A KEK é lida do diretório em `KEK_DIR` na subida (um arquivo por versão — D33); ausência derruba o processo (edge case declarado). O módulo nunca inclui plaintext em mensagem de erro, e um teste garante isso.
 - **Requisitos:** SEC-01, SEC-02, SEC-06, SEC-07, ROT-04, ROT-05.
 
 ### Serviço de conexões (`apps/api/src/connections`)

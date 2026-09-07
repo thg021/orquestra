@@ -1,7 +1,7 @@
 # Roadmap
 
-**Current Milestone:** M1 — Núcleo plugável
-**Status:** Especificado — design e tasks prontos (`.specs/features/pluggable-core/`)
+**Current Milestone:** M2 — Runtime de execução
+**Status:** Especificado — spec em `.specs/features/execution-runtime/`; M1 concluído em 2026-09-06
 
 ---
 
@@ -33,70 +33,94 @@
 
 ---
 
-## M1 — Núcleo plugável ◄ atual
+## M1 — Núcleo plugável ✅ Concluído em 2026-09-06
 
 **Spec:** `.specs/features/pluggable-core/`
 **Goal:** Um tenant consegue instalar, configurar e conectar um serviço pelo painel — sem executá-lo ainda.
 
 ### Features
 
-**Catálogo** — SPECIFIED
+**Catálogo** — DONE
 
 - `AgentDefinition` e `ConnectorDefinition` carregados do código
 - Capabilities como contrato entre agente e conector
-- Listagem do catálogo no painel
+- Listagem do catálogo no painel, com formulário de instalação gerado a partir do `config_schema`
 
-**Service instances** — SPECIFIED
+**Service instances** — DONE
 
 - Ciclo de vida: instalar, ativar, pausar, remover (remoção lógica)
-- Config por instância validada contra `config_schema`
-- Formulário de configuração gerado a partir do schema
+- Config por instância validada contra `config_schema` da versão fixada, editável na tela da instância
+- Gate de ativação nomeando cada impedimento (config inválida, capability obrigatória sem vínculo, conexão revogada, versão de agente ausente)
 
-**Conexões de conector (cofre de segredos)** — SPECIFIED
+**Conexões de conector (cofre de segredos)** — DONE
 
-- Envelope encryption conforme ADR-001: DEK por conexão derivada por tenant, KEK via Docker secret, AES-256-GCM com versão de chave
-- `ConnectorConnection` por tenant; API write-only (nenhum endpoint retorna segredo)
+- Envelope encryption conforme ADR-001: DEK por conexão derivada por tenant (HKDF), KEK via Docker secret (diretório versionado), AES-256-GCM com AAD amarrando tenant/conexão/versão
+- `ConnectorConnection` por tenant; API write-only (nenhum endpoint retorna segredo, nem o painel exibe ou relê um)
 - Credencial por formulário a partir do `auth_schema`; o fluxo OAuth foi adiado para o M3, junto do primeiro adapter que consome o token (o modelo de dados já nasce preparado)
-- `ConnectorBinding` preenchendo as capabilities exigidas pelo agente
-- Bloqueio de ativação enquanto houver capability não preenchida
-- Revogação e rotação de credencial sem recriar bindings
-- Teste de contenção de segredo (não vaza em log, job, resposta de API)
+- `ConnectorBinding` preenchendo as capabilities exigidas pelo agente, com tela própria de vínculo por capability
+- Bloqueio de ativação enquanto houver capability obrigatória não preenchida
+- Revogação (pausa em cascata as instâncias que perdem capability obrigatória) e substituição de credencial sem recriar bindings
+- Rotação de KEK por CLI (`kek:rotate`), resumível e idempotente
+- Teste de contenção de segredo — sentinela varrido por valor em respostas HTTP, log e todas as colunas de texto/jsonb do banco
 - Verificação de conexão declarada, respondendo `unverified` até existir adapter (M3)
+
+**Painel** — DONE
+
+- Tela de catálogo, tela da instância (abas Configuração/Conexões) e tela de conexões
+- Renderizador de formulário genérico a partir de JSON Schema, com campo secreto sempre mascarado e nunca populado com valor do servidor
 
 ---
 
-## M2 — Runtime de execução
+## M2 — Runtime de execução ◄ atual
 
+**Spec:** `.specs/features/execution-runtime/`
 **Goal:** Um agente roda de verdade: agendado, observável, e capaz de parar para pedir aprovação humana.
 
 ### Features
 
-**Motor de execução** — PLANNED
+**Motor de execução** — SPECIFIED
 
 - Fila BullMQ e worker consumindo jobs
 - Execução de grafo LangGraph com checkpointer em Postgres
 - `ServiceRun` e `RunStep` como trilha de auditoria
 
-**Gateway de LLM** — PLANNED
-
-- Chamadas via OpenRouter com modelo configurável por agente
-- Contabilidade de tokens e custo por passo
-
-**Agendamento** — PLANNED
-
-- `Schedule` por instância com cron e timezone
-- Processo `scheduler` enfileirando execuções
-
-**Aprovação humana** — PLANNED
+**Aprovação humana** — SPECIFIED
 
 - Interrupt do grafo emitindo `ApprovalRequest`
 - Run em `awaiting_approval` e retomada a partir do checkpoint
 - Fila de aprovações no painel
+- Aprovação vale só para aquela rodada; gate reavaliado na retomada
 
-**Observabilidade** — PLANNED
+**Plano de entrega** — SPECIFIED
 
-- Histórico de execuções por instância
-- Streaming de log de execução no painel
+- Entrega como primitiva do runtime, não lógica de agente (D40)
+- Lista de itens `{destinatário, capability, mensagem, anexos, chave de idempotência}` — é o payload do `ApprovalRequest`
+- Entrega item a item: falha de um não derruba os outros; rodar de novo não reenvia o que já foi
+- Resultado por item como `RunStep`
+
+**Leitura estruturada de documento** — SPECIFIED
+
+- Extração de texto local; visão como exceção para PDF sem camada de texto (D43)
+- Saída estruturada validada por schema: tipo, CNPJ, nome, vencimento, competência (D42)
+- Triagem por conteúdo, aposentando o prefixo de nome de arquivo
+- Conteúdo de documento é dado, nunca comando (prompt injection)
+
+**Gateway de LLM** — SPECIFIED
+
+- Chamadas via OpenRouter com modelo configurável por agente
+- Contabilidade de tokens e custo por passo
+
+**Agendamento** — SPECIFIED
+
+- `Schedule` por instância com cron e timezone
+- Processo `scheduler` enfileirando execuções
+- Uma execução por janela; janelas perdidas não disparam em rajada
+
+**Observabilidade** — SPECIFIED
+
+- Histórico de execuções por instância, com detalhe por passo e por item entregue
+- Custo da execução visível
+- Streaming de log ao vivo ficou fora do M2 (conforto, não requisito)
 
 ---
 

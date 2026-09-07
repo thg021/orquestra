@@ -41,7 +41,7 @@ export default tseslint.config(
     }
   },
   {
-    files: ["packages/core/**/*.ts", "packages/db/**/*.ts"],
+    files: ["packages/core/**/*.ts", "packages/db/**/*.ts", "packages/catalog/**/*.ts"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -50,7 +50,7 @@ export default tseslint.config(
             {
               group: ["@nestjs/*"],
               message:
-                "packages/core e packages/db são domínio e persistência puros — não podem depender do NestJS."
+                "packages/core, packages/db e packages/catalog são domínio, persistência e declaração puros — não podem depender do NestJS."
             }
           ]
         }

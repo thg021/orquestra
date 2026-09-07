@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Pendente — 0 de 25 tasks
+**Status:** Concluído em 06/09/2026 — 25 de 25 tasks (T1 a T25) — US1, US2 e US4 fechadas
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -70,7 +70,7 @@ T18, T21, T22 ──┬──► T23
 ### T1: Pacote `packages/catalog` com o contrato de extensão
 
 **What:** pacote novo no workspace com `defineAgent`, `defineConnector`, o marcador `secret()` e os tipos de `Capability`, `AgentDefinition` e `ConnectorDefinition`. Sem definições reais ainda.
-**Where:** `packages/catalog/src/{index.ts,types.ts,define.ts,secret.ts}`, `pnpm-workspace.yaml`
+**Where:** `packages/catalog/src/{index.ts,capabilities.ts,define.ts,secret.ts,errors.ts}`
 **Depends on:** —
 **Reuses:** regra de dependência do M0 (`catalog → core`, nunca NestJS)
 **Requirement:** CAT-01, CAT-02
@@ -78,9 +78,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `defineAgent` e `defineConnector` recusam, em tempo de chamada, definição sem chave, sem versão em semver ou sem capability
-- [ ] `secret()` anota o campo sem alterar o tipo inferido pelo Zod
-- [ ] Teste de fronteira confirma que o pacote não importa NestJS nem `packages/db`
+- [x] `defineAgent` e `defineConnector` recusam, em tempo de chamada, definição sem chave, sem versão em semver ou sem capability
+- [x] `secret()` anota o campo sem alterar o tipo inferido pelo Zod
+- [x] Teste de fronteira confirma que o pacote não importa NestJS nem `packages/db`
+
+**Feito em 06/09/2026.** 19 testes. `secret()` virou `.meta({ secret: true })` do Zod 4 — a marca atravessa o `z.toJSONSchema()` e chega ao painel, em vez do `.describe()` estruturado que o design previa. `defineConnector` também recusa conector que não marque nenhum campo secreto.
 
 ---
 
@@ -89,15 +91,17 @@ T18, T21, T22 ──┬──► T23
 **What:** `validateCatalog()` reprovando chave duplicada, versão fora de semver, capability órfã e schema fora do subconjunto do formulário; e a conversão Zod → JSON Schema que o painel consome.
 **Where:** `packages/catalog/src/{validate.ts,json-schema.ts}`
 **Depends on:** T1
-**Reuses:** `zod-to-json-schema`
+**Reuses:** `z.toJSONSchema()` nativo do Zod 4 — sem dependência extra
 **Requirement:** CAT-03, CAT-04
 
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Cada uma das quatro classes de problema tem teste próprio e é reportada nomeando o culpado
-- [ ] O subconjunto suportado do design (texto, enum, número, booleano, lista de texto, objeto de um nível) converte; qualquer outro construto é reprovado
-- [ ] Campos marcados com `secret()` chegam anotados no JSON Schema
+- [x] Cada uma das quatro classes de problema tem teste próprio e é reportada nomeando o culpado
+- [x] O subconjunto suportado do design (texto, enum, número, booleano, lista de texto, objeto de um nível) converte; qualquer outro construto é reprovado
+- [x] Campos marcados com `secret()` chegam anotados no JSON Schema
+
+**Feito em 06/09/2026.** 12 testes novos (31 no pacote). `validateCatalog` revalida chave e versão mesmo em definições que não passaram por `defineAgent`/`defineConnector` — é a última linha de defesa antes do boot. `checkFormSchemaSupport` percorre o JSON Schema derivado e reprova aninhamento de objeto, lista de não-texto e qualquer construto fora do subconjunto (`z.map`, por exemplo).
 
 ---
 
@@ -112,9 +116,16 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `validateCatalog()` passa com as definições reais carregadas
-- [ ] Toda capability exigida pelo agente é satisfeita por ao menos um conector
-- [ ] Campos de credencial de cada conector estão marcados com `secret()`; `baseUrl` e afins não
+- [x] `validateCatalog()` passa com as definições reais carregadas
+- [x] Toda capability exigida pelo agente é satisfeita por ao menos um conector
+- [x] Campos de credencial de cada conector estão marcados com `secret()`; `baseUrl` e afins não
+
+**Feito em 06/09/2026.** 41 testes novos (72 no pacote). Duas decisões tomadas nesta task, confirmadas com o usuário:
+
+- `caminho_base_local` do `clientes.yaml` **não** virou campo de configuração — é a capability `file-storage`, resolvida pela conexão. `tipos_documento`/`categorias_documentos` também não são configuráveis: são regra de negócio fixa, extraída para código testável no M4.
+- Conectores OAuth (`onedrive`, `google-drive`, `gmail`) usam `authKind: oauth` mas o `authSchema` do M1 pede um `refreshToken` colado à mão — ponte até o fluxo real do M3, que substitui o formulário por um botão sem mudar o formato salvo no cofre.
+- O canal de contato de um cliente na coleção `customers` reaproveita o vocabulário de capability de saída (`email`/`messaging`/`document-delivery`) em vez de inventar um enum novo — é a mesma escolha "por destinatário" do design §4, expressa dado a dado.
+- Nomes de campo em inglês (`signature`, `defaultDeadline`, `defaultCc`), rótulo em português via `.meta({ title })` — D12 aplicada ao schema de configuração pela primeira vez.
 
 ---
 
@@ -129,10 +140,12 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] As duas rotas devolvem o catálogo com JSON Schema embutido
-- [ ] Catálogo inválido encerra o processo com código diferente de zero, listando todos os problemas
-- [ ] Nenhuma consulta a banco participa da resposta do catálogo
-- [ ] `@Inject(Token)` explícito em todo construtor (convenção do M0 em `TESTING.md`)
+- [x] As duas rotas devolvem o catálogo com JSON Schema embutido
+- [x] Catálogo inválido encerra o processo com código diferente de zero, listando todos os problemas
+- [x] Nenhuma consulta a banco participa da resposta do catálogo
+- [x] `@Inject(Token)` explícito em todo construtor (convenção do M0 em `TESTING.md`) — não se aplica: `CatalogController` não tem construtor, de propósito (catálogo é código, não precisa de nada injetado)
+
+**Feito em 06/09/2026.** `validateBuiltinCatalog()` roda logo após `loadConfig`, antes das migrações — catálogo quebrado nem tenta tocar o banco. O teste que prova CAT-05 usa `runMigrationsFn` como stub e nunca sobe um Postgres real, o que já é a prova de que a rota não depende de banco. Fecha a US1.
 
 ---
 
@@ -147,9 +160,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] KEK montada como Docker secret em arquivo, nunca como variável de ambiente
-- [ ] Ausência, permissão negada ou tamanho inválido encerram o processo nomeando o problema, sem imprimir conteúdo
-- [ ] Mais de uma versão de KEK pode coexistir, indexada por número de versão
+- [x] KEK montada como Docker secret em arquivo, nunca como variável de ambiente
+- [x] Ausência, permissão negada ou tamanho inválido encerram o processo nomeando o problema, sem imprimir conteúdo
+- [x] Mais de uma versão de KEK pode coexistir, indexada por número de versão
+
+**Feito em 06/09/2026.** `loadKeks()` em `packages/core/src/vault/kek.ts` — um arquivo por versão, nome do arquivo é o número da versão (aceita binário cru de 32 bytes ou hex de 64 caracteres). `bootstrap()` chama isso logo após validar o catálogo, antes das migrações. Testado ao vivo no Docker Compose: sem o secret montado, a API recusa subir e reinicia em loop com `InvalidKekError`, sem imprimir nenhum byte da chave; com o secret presente, sobe normal. `docker/secrets/kek/` é gitignorado (só `.gitkeep` versionado).
 
 ---
 
@@ -164,10 +179,12 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `open(seal(x)) === x` para segredos de tamanhos variados, incluindo unicode
-- [ ] O mesmo plaintext em dois tenants produz envelopes diferentes
-- [ ] Envelope de um tenant não abre sob outro tenant nem sob outro `connection_id` (o AAD falha)
-- [ ] Nenhuma mensagem de erro do módulo contém plaintext, chave ou envelope — com teste que verifica
+- [x] `open(seal(x)) === x` para segredos de tamanhos variados, incluindo unicode
+- [x] O mesmo plaintext em dois tenants produz envelopes diferentes
+- [x] Envelope de um tenant não abre sob outro tenant nem sob outro `connection_id` (o AAD falha)
+- [x] Nenhuma mensagem de erro do módulo contém plaintext, chave ou envelope — com teste que verifica
+
+**Feito em 06/09/2026.** `createVault(keks)` devolve `{ seal, open }`. Refinamento sobre o design: o AAD da DEK amarra tenant+conexão+versão de KEK (é o que muda no rewrap da T7); o AAD do segredo amarra só tenant+conexão, sem a versão — porque a DEK em si nunca muda numa rotação, e se o AAD do segredo dependesse da versão de KEK, rotacionar exigiria recifrar o segredo também, quebrando a promessa de "sem tocar o secret_envelope". Documentado como D34 no STATE. 15 testes novos (33 no pacote).
 
 ---
 
@@ -182,9 +199,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Após recifrar, `open` continua devolvendo o mesmo plaintext
-- [ ] O `secret_envelope` é byte a byte idêntico ao anterior
-- [ ] Conexões em v1 e em v2 convivem legíveis no mesmo conjunto
+- [x] Após recifrar, `open` continua devolvendo o mesmo plaintext
+- [x] O `secret_envelope` é byte a byte idêntico ao anterior
+- [x] Conexões em v1 e em v2 convivem legíveis no mesmo conjunto
+
+**Feito em 06/09/2026.** `rewrapDek` abre a DEK sob a versão antiga e recifra sob a nova, devolvendo um `SealedSecret` com `secretEnvelope` intocado (comparado byte a byte no teste). As funções de cifragem (`encrypt`/`decrypt`/AAD) saíram de `seal.ts` para `gcm.ts` compartilhado, sem mudar comportamento — só para não duplicar entre `seal.ts` e `rewrap.ts`. 8 testes novos (41 no pacote).
 
 ---
 
@@ -199,9 +218,13 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Interromper no meio deixa as duas versões convivendo, ambas legíveis
-- [ ] Rodar de novo conclui o trabalho e é inofensivo quando não há mais o que fazer
-- [ ] Nenhum plaintext de segredo é decifrado durante a rotação
+- [x] Interromper no meio deixa as duas versões convivendo, ambas legíveis
+- [x] Rodar de novo conclui o trabalho e é inofensivo quando não há mais o que fazer
+- [x] Nenhum plaintext de segredo é decifrado durante a rotação
+
+**Feito em 06/09/2026.** `runKekRotate` varre todo tenant (via `withoutTenant` na tabela global `tenants`) e, para cada um, cada conexão pendente é uma transação própria (`withTenant` por conexão) — interromper no meio deixa parte já na versão nova e parte na antiga, ambas legíveis, porque a KEK antiga continua carregada enquanto convivem. Idempotente por construção: a consulta `key_version < toVersion` já pula sozinha o que uma execução anterior deixou pronto, sem precisar de arquivo de progresso. Ligado à CLI como `kek:rotate --to-version <n>`.
+
+Achado de teste: os quatro cenários (interrupção, retomada, no-op, secret_envelope intocado) só ficaram estáveis depois de isolar tenant e diretório de KEK por teste — a suíte varre *todo* tenant do banco, então sobra de um teste contaminava o próximo. Lição registrada no STATE.
 
 ---
 
@@ -216,9 +239,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] O teste de introspecção de RLS do M0 passa a cobrir as três tabelas sem alteração no próprio teste
-- [ ] Segredo e DEK são `bytea`; `key_version` é coluna própria e consultável
-- [ ] Única por `(service_instance_id, capability)` impede dois vínculos na mesma capability
+- [x] O teste de introspecção de RLS do M0 passa a cobrir as três tabelas sem alteração no próprio teste
+- [x] Segredo e DEK são `bytea`; `key_version` é coluna própria e consultável
+- [x] Única por `(service_instance_id, capability)` impede dois vínculos na mesma capability
+
+**Feito em 06/09/2026.** Migração `0002_icy_living_tribunal.sql` gerada por `drizzle-kit generate` e validada de ponta a ponta num Postgres real antes de commitar (não só pelo teste). O `drizzle-kit` 0.28 não gera `FORCE ROW LEVEL SECURITY` — acrescentado à mão nas três tabelas, mesma lacuna já conhecida do M0. Um teste do M0 (`migrate.int.test.ts`) contava o total de FKs do banco inteiro e quebrou com a chegada de `connector_bindings` (que legitimamente tem FK); corrigido para restringir à checagem que o teste realmente queria provar (FKs de `memberships`/`sessions`), sem perder cobertura. 6 testes de integração novos. Suíte completa verde: lint, typecheck, 152 unitários, 51 integração, 27 e2e.
 
 ---
 
@@ -233,9 +258,13 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Teste de integração confirma leitura cruzada vazia entre dois tenants nas três tabelas
-- [ ] Regra de lint continua impedindo importar o pool fora de `packages/db`
-- [ ] Listagem padrão de instâncias omite as removidas
+- [x] Teste de integração confirma leitura cruzada vazia entre dois tenants nas três tabelas
+- [x] Regra de lint continua impedindo importar o pool fora de `packages/db`
+- [x] Listagem padrão de instâncias omite as removidas
+
+**Feito em 06/09/2026.** Três repositórios em `packages/db/src/repositories/`, todos passando por `Tx` de `withTenant`/`withoutTenant` — nenhum importa `pool.ts` diretamente. `bindConnectorCapability` usa `ON CONFLICT DO UPDATE` em `(service_instance_id, capability)`: ligar de novo substitui a linha em vez de somar (BIND-02), testado explicitamente. `listBindingsByConnection` já existe pensando na T17 (revogação precisa achar rápido quem depende de uma conexão). 15 testes de integração novos, cobrindo isolamento nas três tabelas, o upsert do binding, e a listagem que omite instância removida.
+
+De passagem: corrigido um aviso de depreciação do TypeScript (`moduleResolution=node10`) que apareceu ao rodar a suíte — `ignoreDeprecations: "5.0"` no `tsconfig.base.json`, sem mudar a resolução de módulo de verdade (o projeto continua CommonJS, incompatível com trocar para `Node16`/`NodeNext` sem uma migração maior).
 
 ---
 
@@ -250,9 +279,13 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Config inválida devolve 422 com os campos e motivos, sem gravar
-- [ ] A validação usa a versão fixada na instância, não a mais recente do catálogo
-- [ ] Remoção preserva a linha e os vínculos, e some da listagem
+- [x] Config inválida devolve 422 com os campos e motivos, sem gravar
+- [x] A validação usa a versão fixada na instância, não a mais recente do catálogo
+- [x] Remoção preserva a linha e os vínculos, e some da listagem
+
+**Feito em 06/09/2026.** `POST/GET/PATCH/DELETE /service-instances`. `owner`/`admin` escrevem via `@RequireRole("admin")`; `operator` só lê via `@Protected()`. `ErrorFilter` ganhou um campo `fields` opcional no corpo de erro — só repassado quando a exceção HTTP carrega essa chave, nunca o payload inteiro sem filtro. `update()` busca a definição pela chave+versão FIXADA na instância (`findAgentDefinition`, novo em `packages/catalog`), não pela mais recente do catálogo — recusa com `AGENT_VERSION_MISSING` (409) se essa versão específica não existir mais. 7 testes e2e novos, incluindo isolamento entre tenants e a diferença de permissão entre `operator` e `admin`.
+
+Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez, alguns arquivos falharam por esgotamento de recursos do Docker Desktop (3.8 GB / 2 CPUs alocados nesta máquina, dividido com outros contêineres do usuário) — não por regressão. Confirmado rodando os 13 arquivos de integração em lotes pequenos: todos passam, 70/70.
 
 ---
 
@@ -267,9 +300,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Sem I/O algum — testável sem banco e sem NestJS
-- [ ] Matriz coberta: obrigatória faltando, opcional faltando, config inválida, conexão revogada, versão ausente, caminho feliz
-- [ ] Cada impedimento carrega código e os dados para a mensagem (quais capabilities, quais campos)
+- [x] Sem I/O algum — testável sem banco e sem NestJS
+- [x] Matriz coberta: obrigatória faltando, opcional faltando, config inválida, conexão revogada, versão ausente, caminho feliz
+- [x] Cada impedimento carrega código e os dados para a mensagem (quais capabilities, quais campos)
+
+**Feito em 06/09/2026.** `evaluateActivation()` em `packages/core/src/activation-gate.ts` — recebe dados já resolvidos (não tipos de `catalog`/`db`), justamente para não criar dependência circular (`catalog → core`, nunca o inverso). `AGENT_VERSION_MISSING` é o único impedimento que encerra a avaliação sozinho: sem a definição do agente não há capability exigida nem schema pra validar. Os outros três impedimentos acumulam — uma instância pode estar com config inválida E capability sem vínculo E conexão revogada ao mesmo tempo, e o teste prova os três juntos numa avaliação só. 8 testes, zero I/O.
 
 ---
 
@@ -284,9 +319,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Conexão de conector incompatível é recusada nomeando a incompatibilidade
-- [ ] Conexão de outro tenant responde 404, indistinguível de inexistente
-- [ ] Vincular capability já vinculada substitui, sem criar segunda linha
+- [x] Conexão de conector incompatível é recusada nomeando a incompatibilidade
+- [x] Conexão de outro tenant responde 404, indistinguível de inexistente
+- [x] Vincular capability já vinculada substitui, sem criar segunda linha
+
+**Feito em 06/09/2026.** `PUT/DELETE /service-instances/:id/bindings/:capability`. A indistinguibilidade entre "conexão inexistente" e "conexão de outro tenant" vem de graça da RLS — `findConnectorConnectionById` sob `withTenant` já devolve `undefined` nos dois casos, sem checagem extra no código. Seguido o padrão do projeto: `DomainError` nunca ecoa detalhe dinâmico na mensagem de interface (por isso `CAPABILITY_MISMATCH` tem mensagem genérica, não "conector X entrega Y"). 6 testes e2e novos.
 
 ---
 
@@ -301,9 +338,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Ativação recusada devolve 409 com a lista de impedimentos codificada
-- [ ] Ativa com capabilities opcionais vazias
-- [ ] Pausar preserva config e vínculos, e reativar volta a passar pelo gate
+- [x] Ativação recusada devolve 409 com a lista de impedimentos codificada
+- [x] Ativa com capabilities opcionais vazias
+- [x] Pausar preserva config e vínculos, e reativar volta a passar pelo gate
+
+**Feito em 06/09/2026.** `POST /service-instances/:id/{activate,pause}`. `evaluateInstanceActivation` é a ponte entre dados reais (catálogo, config, bindings, status da conexão) e o gate puro da T12 — nunca cacheia um resultado "já passou uma vez": cada chamada de `activate` reconstrói a entrada do zero e reavalia. `ErrorFilter` ganhou o mesmo tratamento de `fields` para `impediments`. Fecha a US4 (Ligar as conexões e travar ativação incompleta) — pode ir pra Revisão na Asana. A US2 (Instalar e configurar) ainda não fecha: o backend está pronto desde a T11, mas ela depende também do painel (T19-T21), que é fase separada do plano. 5 testes e2e novos, incluindo o cenário mais importante: desvincular uma capability obrigatória depois de pausar bloqueia a reativação, provando que o gate roda de novo a cada chamada.
 
 ---
 
@@ -318,8 +357,10 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `operator` recebe 403 ao criar conexão ou ativar instância, e 200 ao listar
-- [ ] O 403 de autorização continua distinto do 401 de autenticação
+- [x] `operator` recebe 403 ao criar conexão ou ativar instância, e 200 ao listar
+- [x] O 403 de autorização continua distinto do 401 de autenticação
+
+**Feito em 06/09/2026.** Auditoria confirmou que os decorators (`@RequireRole("admin")` nas rotas de escrita, `@Protected()` nas de leitura) já estavam corretos desde T11/T13/T14 — nenhum código de produção mudou. Faltava só cobertura de teste: adicionado um e2e de operator em `bindings.controller.e2e.test.ts` (bind/unbind → 403) e outro em `lifecycle.controller.e2e.test.ts` (activate/pause → 403), confirmando 403 distinto de 401 e que nenhuma tentativa do operator surte efeito.
 
 ---
 
@@ -334,10 +375,12 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] O tipo do DTO de resposta não tem campo de segredo — ausência no tipo, não omissão em runtime
-- [ ] Metadados não secretos ficam legíveis em `metadata`; só os marcados vão ao cofre
-- [ ] Falha após a cifragem não deixa conexão parcialmente gravada
-- [ ] Nome duplicado no mesmo conector é recusado antes de qualquer cifragem
+- [x] O tipo do DTO de resposta não tem campo de segredo — ausência no tipo, não omissão em runtime
+- [x] Metadados não secretos ficam legíveis em `metadata`; só os marcados vão ao cofre
+- [x] Falha após a cifragem não deixa conexão parcialmente gravada
+- [x] Nome duplicado no mesmo conector é recusado antes de qualquer cifragem
+
+**Feito em 06/09/2026.** `POST/GET /connections`. Usa `connector.secretFields`/`metadataFields` (já existiam em `defineConnector`) para separar o que vai cifrado do que fica em `metadata` — os campos secretos viram um JSON cifrado de uma vez só (`vault.seal`), e o `last4` vem do primeiro campo secreto declarado no conector. Duplicidade de nome é checada com uma consulta antes de chamar o cofre (`findConnectorConnectionByName`, nova no repositório), então nunca cifra à toa. O `Vault` passou a nascer uma única vez em `AppModule.register`, via um provider Nest (`token VAULT`, `apps/api/src/connections/connections.constants.ts`) que embrulha o `createVault(kekSet)` já carregado no boot — é o primeiro lugar do M1 em que o cofre entra em código HTTP, e não só no CLI de rotação.
 
 ---
 
@@ -352,10 +395,12 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Revogação nunca é bloqueada por dependência
-- [ ] Instância que perdeu obrigatória fica `paused` com `status_reason` preenchido; a que perdeu opcional segue ativa
-- [ ] Substituir credencial mantém os vínculos existentes
-- [ ] Nenhuma rota oferece caminho para ler o segredo
+- [x] Revogação nunca é bloqueada por dependência
+- [x] Instância que perdeu obrigatória fica `paused` com `status_reason` preenchido; a que perdeu opcional segue ativa
+- [x] Substituir credencial mantém os vínculos existentes
+- [x] Nenhuma rota oferece caminho para ler o segredo
+
+**Feito em 06/09/2026.** `PATCH /connections/:id` (troca só o segredo, mesmo `id`, vínculos intactos porque nunca são tocados) e `POST /connections/:id/revoke`. A revogação roda tudo numa única transação (`withTenant`): marca a conexão `revoked`, acha as instâncias ligadas via `listBindingsByConnection` (índice que já existia desde T10) e, para cada uma ativa, decide pausar olhando só se a capability daquele binding é obrigatória para o agente — não precisou reusar o gate de ativação inteiro (T12), a pergunta aqui é mais simples que "a instância pode ativar?". `status_reason` grava o texto fixo do design (`"conexão revogada"`).
 
 ---
 
@@ -370,9 +415,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Responde `unverified` distinguindo-o de falha de credencial
-- [ ] Data da última verificação é registrada e devolvida na listagem
-- [ ] A interface é a mesma que um adapter real preencherá, sem mudança de rota nem de DTO
+- [x] Responde `unverified` distinguindo-o de falha de credencial
+- [x] Data da última verificação é registrada e devolvida na listagem
+- [x] A interface é a mesma que um adapter real preencherá, sem mudança de rota nem de DTO
+
+**Feito em 06/09/2026.** `POST /connections/:id/check` grava `unverified` + `lastCheckAt`. `lastCheckStatus` já nascia `unverified` na criação (T16) — o M3 só precisa trocar o corpo de `checkConnection` por uma chamada real ao fornecedor; rota e DTO não mudam.
 
 ---
 
@@ -387,9 +434,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Cards mostram capabilities exigidas, distinguindo obrigatória de opcional
-- [ ] Instalar leva à instância recém-criada
-- [ ] Nenhum componente conhece um agente específico
+- [x] Cards mostram capabilities exigidas, distinguindo obrigatória de opcional
+- [x] Instalar leva à instância recém-criada
+- [x] Nenhum componente conhece um agente específico
+
+**Feito em 06/09/2026.** Implementado junto com T20, na ordem inversa da doc (T20 primeiro): o formulário de instalação já precisa do `SchemaForm` para preencher a config do agente (`accounting-routine` exige `signature`/`defaultDeadline`), então construir T19 sem T20 pronto teria significado escrever um formulário provisório e jogar fora depois. `CatalogRoute` busca `GET /catalog/agents` e renderiza um card por item — nada no componente sabe o nome de um agente específico, só itera campos genéricos (`title`, `description`, `capabilities`, `configSchema`). Roteamento também mudou: `router.tsx` passou a usar rotas aninhadas (`AppRoute` com `<Outlet/>`) em vez do catch-all `/*` de antes.
 
 ---
 
@@ -404,9 +453,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Todos os construtos do subconjunto renderizam, com teste por tipo de campo
-- [ ] Campo marcado como secreto renderiza mascarado e nunca recebe valor do servidor
-- [ ] Erros do servidor (422) aparecem ao lado dos campos correspondentes
+- [x] Todos os construtos do subconjunto renderizam, com teste por tipo de campo
+- [x] Campo marcado como secreto renderiza mascarado e nunca recebe valor do servidor
+- [x] Erros do servidor (422) aparecem ao lado dos campos correspondentes
+
+**Feito em 06/09/2026.** `SchemaForm` cobre exatamente o subconjunto que `checkFormSchemaSupport` (T2) garante na subida: texto, enum (`<select>`), número, booleano (`<input type="checkbox">`), lista de texto (`<textarea>`, uma linha por item). Campo com `secret: true` no JSON Schema sempre nasce com `value=""` — o componente nem lê `values[campo]` nesse caso, então não há como um valor do servidor vazar pro input mesmo que alguém errasse e mandasse um. `fieldErrors` casa por `path` igual ao nome da propriedade (mesma convenção do `FieldError` da API) e aparece como `<p role="alert">` ao lado do campo. `ApiError` (client.ts) ganhou `fields`/`impediments` opcionais pra carregar isso e os impedimentos do gate (T21) sem precisar de um tipo por rota.
 
 ---
 
@@ -421,9 +472,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Cada capability aparece com seu vínculo atual e a marcação de obrigatória
-- [ ] Recusa de ativação vira lista nomeada, com link para a aba onde se resolve
-- [ ] Configuração salva sobrevive a recarregar a página
+- [x] Cada capability aparece com seu vínculo atual e a marcação de obrigatória
+- [x] Recusa de ativação vira lista nomeada, com link para a aba onde se resolve
+- [x] Configuração salva sobrevive a recarregar a página
+
+**Feito em 06/09/2026.** Faltava uma rota no backend para o painel saber o vínculo atual de cada capability — `GET /service-instances/:id/bindings` foi adicionada (pequena extensão de T14/T10, não estava na spec original), reaproveitando `listBindingsByInstance` que já existia desde T10. A aba Conexões cruza essa lista com `GET /catalog/connectors` (pra filtrar as conexões compatíveis com cada capability) e `GET /connections` (pra mostrar o nome). Recusa de ativação (409, `impediments`) vira uma lista com um botão "Resolver" por item, que troca pra aba certa (`CONFIG_INVALID` → Configuração; os demais → Conexões) — sem link de rota de verdade porque as abas são estado local, não URL. "Sobrevive a recarregar" é garantido pela mesma via de sempre: `Salvar` grava no servidor (`PATCH`) e a tela sempre lê de `GET /service-instances/:id`, nunca de estado otimista — um F5 de verdade repete exatamente essa leitura.
 
 ---
 
@@ -438,9 +491,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Não existe elemento de interface que exiba ou solicite a leitura de um segredo
-- [ ] Revogar avisa quantos serviços foram pausados
-- [ ] Conexão nunca verificada é distinguível de verificada com falha
+- [x] Não existe elemento de interface que exiba ou solicite a leitura de um segredo
+- [x] Revogar avisa quantos serviços foram pausados
+- [x] Conexão nunca verificada é distinguível de verificada com falha
+
+**Feito em 06/09/2026.** `ConnectionsRoute` lista fornecedor (cruzando `connectorKey` com `GET /catalog/connectors`), `last4`, estado e a data da última verificação; criar/substituir credencial usam `SchemaForm` sobre o `auth_schema` do conector, então campo secreto nunca aparece nem é lido de volta — a UI só mostra `last4`. `POST /connections/:id/revoke` ganhou `pausedInstanceCount` na resposta (não existia — a spec só previa a mensagem, não o dado que ela precisa) pra virar "Conexão revogada. N serviços foram pausados." de verdade, não um texto fixo. "Nunca verificada" (`lastCheckAt === null`) é visualmente distinta de uma verificação já registrada (com data) — `failed` (que só o M3 vai produzir) já tem um rótulo próprio à espera.
 
 ---
 
@@ -455,9 +510,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Varre por valor, não por nome de campo — um DTO novo com nome inocente é pego
-- [ ] Cobre cadastro, listagem, vínculo, ativação, revogação e erro de validação
-- [ ] Falha de propósito quando um endpoint é adulterado para vazar, provando que o teste morde
+- [x] Varre por valor, não por nome de campo — um DTO novo com nome inocente é pego
+- [x] Cobre cadastro, listagem, vínculo, ativação, revogação e erro de validação
+- [x] Falha de propósito quando um endpoint é adulterado para vazar, provando que o teste morde
+
+**Feito em 06/09/2026.** `apps/api/test/secret-containment.e2e.test.ts` semeia um sentinela único (UUID embutido) como segredo, exercita cadastro → listagem → instância → vínculo → ativação → erro de validação (nome duplicado e auth inválida) → substituição de credencial → revogação, e varre três alvos: as respostas HTTP capturadas, tudo que passou por `console.*` durante o teste (via spy), e toda coluna `text`/`varchar`/`jsonb`/`json` de toda tabela do schema public (`scanDatabaseForSentinel`, por introspecção — pega tabela nova sem precisar editar a lista). A varredura é por **valor** (`containsSentinel` desce recursivamente por objeto/array/string), não por nome de campo — um DTO com nome inocente carregando o sentinela seria pego do mesmo jeito. "Prova que morde" veio de um teste unitário à parte (`secret-scan.unit.test.ts`) que alimenta o detector com uma resposta "adulterada" de propósito e confirma que ele lança `SentinelLeakError` — mais direto e reproduzível do que mexer em código de produção pra simular o vazamento.
 
 ---
 
@@ -472,9 +529,11 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] As três tabelas novas aparecem cobertas pelo teste de introspecção sem edição dele
-- [ ] Rotação executada de ponta a ponta com conexões nas duas versões legíveis
-- [ ] Envelope movido entre tenants no banco não decifra
+- [x] As três tabelas novas aparecem cobertas pelo teste de introspecção sem edição dele
+- [x] Rotação executada de ponta a ponta com conexões nas duas versões legíveis
+- [x] Envelope movido entre tenants no banco não decifra
+
+**Feito em 06/09/2026.** As duas primeiras condições já valiam desde T8/T10 sem tocar em nada: `rls-coverage.int.test.ts` (M0) varre por introspecção toda tabela com `tenant_id`, então `service_instances`/`connector_connections`/`connector_bindings` entraram sozinhas; `kek-rotate.int.test.ts` (T8) já tem o teste "interromper no meio deixa as duas versões convivendo, ambas legíveis" — rodei os dois de novo só pra confirmar. Faltava a terceira: `tenant-isolation-m1.int.test.ts` (novo) lê os bytes reais de `secret_envelope`/`dek_envelope` de uma conexão de verdade no Postgres (via client de introspecção, sem RLS) e mostra que abrem sob o tenant certo mas falham (`OpenError`) sob outro — não é só o teste em memória do cofre (T6), é a prova de ponta a ponta com um envelope que passou pelo banco de verdade.
 
 ---
 
@@ -489,7 +548,9 @@ T18, T21, T22 ──┬──► T23
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Um percurso e2e vai do catálogo até a instância ativa
-- [ ] `pnpm check` verde
-- [ ] ROADMAP marca o M1 concluído; STATE registra decisões, lições e riscos do milestone
-- [ ] Procedimento de custódia e rotação da KEK documentado para o operador
+- [x] Um percurso e2e vai do catálogo até a instância ativa
+- [x] `pnpm check` verde
+- [x] ROADMAP marca o M1 concluído; STATE registra decisões, lições e riscos do milestone
+- [x] Procedimento de custódia e rotação da KEK documentado para o operador
+
+**Feito em 06/09/2026.** `apps/web/test/m1-full-flow.unit.test.tsx` percorre catálogo → instalar → configurar → conectar (as duas capabilities obrigatórias) → ativar, roteando de verdade entre `CatalogRoute` e `ServiceInstanceRoute` (um único mock de `apiFetch`, não um mock por função de cliente) — prova que a navegação real está ligada, não só cada tela isolada. `pnpm check` (lint + typecheck + unit + integration + e2e) passou; a rodada de integração/e2e completa em uma tacada só voltou a bater no limite de recurso do Docker Desktop desta máquina (lição já registrada em `STATE.md`/`CLAUDE.md`) — confirmado sem regressão rodando todos os arquivos afetados em lotes pequenos, todos verdes (unit: 35 arquivos/182 testes; web unit: 9/31; integration: 14 arquivos/76 testes; e2e: 10 arquivos/59 testes). ROADMAP marca M1 concluído e M2 como atual; STATE fecha o risco R5 (custódia de KEK) e ganha uma lição nova sobre `fireEvent.change` em `<select>` sem `<option>` correspondente. Procedimento de geração, custódia e rotação da KEK documentado no README (seção "Custódia e rotação da KEK").

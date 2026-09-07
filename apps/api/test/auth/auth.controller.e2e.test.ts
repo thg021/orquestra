@@ -7,9 +7,11 @@ import { createTenantWithOwner } from "../../src/identity/identity.repository";
 import { hashPassword } from "@orquestra/core";
 import { SESSION_COOKIE_NAME } from "../../src/auth/session.guard";
 import { startTestDatabase, type TestDatabase } from "../support/test-database";
+import { createTestKekDir } from "../support/test-kek";
 
 const PASSWORD = "senha-correta-123";
 const PASSWORD_COST = { memoryCost: 1024, timeCost: 2, parallelism: 1 };
+const KEK_DIR = createTestKekDir();
 
 function baseEnv(databaseUrl: string): NodeJS.ProcessEnv {
   return {
@@ -18,7 +20,8 @@ function baseEnv(databaseUrl: string): NodeJS.ProcessEnv {
     REDIS_URL: "redis://localhost:6379",
     SESSION_SECRET: "a".repeat(32),
     API_PORT: "3000",
-    PROCESS_ROLE: "api"
+    PROCESS_ROLE: "api",
+    KEK_DIR
   };
 }
 

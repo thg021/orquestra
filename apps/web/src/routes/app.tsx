@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "../components/protected-route";
 import { apiFetch } from "../api/client";
 
@@ -23,7 +23,9 @@ export default function AppRoute() {
               Sair
             </button>
           </header>
-          <main>{/* conteúdo funcional chega nos milestones seguintes */}</main>
+          <main>
+            <Outlet />
+          </main>
         </div>
       )}
     </ProtectedRoute>

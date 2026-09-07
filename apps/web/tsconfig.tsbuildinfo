@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/router.tsx","./src/api/client.ts","./src/components/protected-route.tsx","./src/routes/app.tsx","./src/routes/login.tsx","./test/api/client.unit.test.ts","./test/components/protected-route.unit.test.tsx","./test/routes/app.unit.test.tsx","./test/routes/login.unit.test.tsx"],"version":"5.9.3"}

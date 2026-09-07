@@ -1,12 +1,16 @@
 import { z } from "zod";
 
 const configSchema = z.object({
-  DATABASE_URL: z.string().url("DATABASE_URL precisa ser uma URL válida"),
-  DATABASE_MIGRATION_URL: z.string().url("DATABASE_MIGRATION_URL precisa ser uma URL válida"),
-  REDIS_URL: z.string().url("REDIS_URL precisa ser uma URL válida"),
+  DATABASE_URL: z.url("DATABASE_URL precisa ser uma URL válida"),
+  DATABASE_MIGRATION_URL: z.url("DATABASE_MIGRATION_URL precisa ser uma URL válida"),
+  REDIS_URL: z.url("REDIS_URL precisa ser uma URL válida"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET precisa ter ao menos 32 caracteres"),
-  API_PORT: z.coerce.number({ invalid_type_error: "API_PORT precisa ser numérica" }).int().positive(),
-  PROCESS_ROLE: z.enum(["api", "worker", "scheduler"])
+  API_PORT: z.coerce.number({ error: "API_PORT precisa ser numérica" }).int().positive(),
+  PROCESS_ROLE: z.enum(["api", "worker", "scheduler"]),
+  // Diretório com um arquivo por versão de KEK (nome do arquivo = número da versão).
+  // Nunca uma variável de ambiente com a chave em si — isso vaza em `docker inspect`
+  // e em dump de processo (ADR-001).
+  KEK_DIR: z.string().min(1, "KEK_DIR é obrigatório")
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
