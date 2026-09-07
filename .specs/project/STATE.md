@@ -90,6 +90,8 @@
 - Onboarding self-service para novos tenants
 - Keycloak (ou outro provedor de identidade) para login de usuário no painel, se um tenant quiser entrar com a conta corporativa — avaliado em 2026-09-06 e descartado para custódia de credencial de conector, que é problema de credencial de máquina, não de identidade de pessoa
 - Swagger/OpenAPI para documentar a API — pedido pelo usuário em 2026-09-06. Sem milestone definido; entra quando a superfície de rotas do M1 estiver mais estável (depois da US2/US3), para não documentar rota que ainda vai mudar de forma
+- Agente local de desktop para `file-storage` — pedido pelo usuário em 2026-09-07. Não substitui o painel web nem o modelo multitenant: é um extra opcional que o escritório instala na própria máquina, com acesso direto à pasta sincronizada (OneDrive/Drive já baixados localmente), evitando a API do fornecedor de nuvem. O usuário continua com acesso normal ao SaaS. Cabe como um adapter alternativo de `file-storage` no M3 (ao lado de `onedrive`/`google-drive`/`platform-upload`) — mas evitar de vender rótulo pesado: o "agente" precisa de um jeito de falar com o backend (upload por API, provavelmente), o que é escopo de design ainda não feito
+- Mensageria: manter as três vias abertas, não escolher uma só — pedido pelo usuário em 2026-09-07. WhatsApp Cloud API oficial (já no M3), WhatsApp via bridge não-oficial tipo Baileys (grátis, risco de banimento — avisado ao usuário), e Telegram Bot API (grátis, sem risco de bloqueio, adoção menor no Brasil). Cada uma pode virar um `ConnectorDefinition` próprio com a mesma capability `messaging` — o agente escolhe qual bindar, sem mudar o modelo. Falta decidir prioridade de implementação quando o M3 chegar
 
 ## Preferências
 
