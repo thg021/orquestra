@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 22 de 25 tasks (T1 a T22 concluídas em 06/09/2026) — US1, US2 e US4 fechadas
+**Status:** Em andamento — 23 de 25 tasks (T1 a T23 concluídas em 06/09/2026) — US1, US2 e US4 fechadas
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -510,9 +510,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Varre por valor, não por nome de campo — um DTO novo com nome inocente é pego
-- [ ] Cobre cadastro, listagem, vínculo, ativação, revogação e erro de validação
-- [ ] Falha de propósito quando um endpoint é adulterado para vazar, provando que o teste morde
+- [x] Varre por valor, não por nome de campo — um DTO novo com nome inocente é pego
+- [x] Cobre cadastro, listagem, vínculo, ativação, revogação e erro de validação
+- [x] Falha de propósito quando um endpoint é adulterado para vazar, provando que o teste morde
+
+**Feito em 06/09/2026.** `apps/api/test/secret-containment.e2e.test.ts` semeia um sentinela único (UUID embutido) como segredo, exercita cadastro → listagem → instância → vínculo → ativação → erro de validação (nome duplicado e auth inválida) → substituição de credencial → revogação, e varre três alvos: as respostas HTTP capturadas, tudo que passou por `console.*` durante o teste (via spy), e toda coluna `text`/`varchar`/`jsonb`/`json` de toda tabela do schema public (`scanDatabaseForSentinel`, por introspecção — pega tabela nova sem precisar editar a lista). A varredura é por **valor** (`containsSentinel` desce recursivamente por objeto/array/string), não por nome de campo — um DTO com nome inocente carregando o sentinela seria pego do mesmo jeito. "Prova que morde" veio de um teste unitário à parte (`secret-scan.unit.test.ts`) que alimenta o detector com uma resposta "adulterada" de propósito e confirma que ele lança `SentinelLeakError` — mais direto e reproduzível do que mexer em código de produção pra simular o vazamento.
 
 ---
 
