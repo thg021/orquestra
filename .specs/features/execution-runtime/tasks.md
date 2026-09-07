@@ -3,7 +3,7 @@
 **Design:** `.specs/features/execution-runtime/design.md`
 **Spec:** `.specs/features/execution-runtime/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Não iniciado — 0 de 29 tasks
+**Status:** Em andamento — 1 de 29 tasks (T1 concluída em 07/09/2026)
 
 29 tasks. Uma entrega por task, com teste co-locado.
 
@@ -93,11 +93,13 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `service_runs`, `run_steps`, `approval_requests`, `delivery_receipts`, `schedules` e `graph_checkpoints` existem com `tenant_id`
-- [ ] As seis aparecem cobertas pelo teste de introspecção de RLS do M0 sem editar esse teste
-- [ ] A migração gerada recebeu à mão o `FORCE ROW LEVEL SECURITY` de cada tabela (o `drizzle-kit` 0.28 não gera)
-- [ ] `delivery_receipts` tem índice único em `(tenant_id, service_instance_id, idempotency_key)`
-- [ ] `approval_requests` impede dois pedidos pendentes para o mesmo run
+- [x] `service_runs`, `run_steps`, `approval_requests`, `delivery_receipts`, `schedules` e `graph_checkpoints` existem com `tenant_id`
+- [x] As seis aparecem cobertas pelo teste de introspecção de RLS do M0 sem editar esse teste
+- [x] A migração gerada recebeu à mão o `FORCE ROW LEVEL SECURITY` de cada tabela (o `drizzle-kit` 0.28 não gera)
+- [x] `delivery_receipts` tem índice único em `(tenant_id, service_instance_id, idempotency_key)`
+- [x] `approval_requests` impede dois pedidos pendentes para o mesmo run
+
+**Feito em 07/09/2026.** Migração `0003_execution_runtime.sql`. Três detalhes que valem registro: o índice de aprovação é **parcial** (`where status = 'pending'`), então um run pode ter vários pedidos ao longo do grafo desde que só um esteja aberto por vez; `cost_usd` é `numeric(12,6)` e não float, porque custo é dinheiro e some centavo em arredondamento binário; e `run_steps` tem `seq` com unicidade por run, porque o relógio não serve para ordenar — dois passos caem no mesmo instante. O helper de policy precisou do tipo `ExtraConfigColumn`, não do builder de coluna: dentro do callback de config o Drizzle entrega outra coisa.
 
 ---
 
