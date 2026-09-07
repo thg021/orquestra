@@ -11,6 +11,8 @@ import {
 import { ApiError, type ApiFieldError } from "../../api/client";
 import { SchemaForm, type JsonObjectSchema } from "../../schema-form/schema-form";
 
+const GENERIC_ERROR_MESSAGE = "Não foi possível concluir a ação. Tente novamente.";
+
 function checkLabel(connection: ConnectionSummary): string {
   if (!connection.lastCheckAt) {
     return "Nunca verificada";
@@ -52,6 +54,8 @@ function NewConnectionForm({
       if (error instanceof ApiError) {
         setFieldErrors(error.fields);
         setErrorMessage(error.fields ? undefined : error.message);
+      } else {
+        setErrorMessage(GENERIC_ERROR_MESSAGE);
       }
     }
   }
@@ -104,6 +108,7 @@ function ReplaceSecretForm({
   const [open, setOpen] = useState(false);
   const [auth, setAuth] = useState<Record<string, unknown>>({});
   const [fieldErrors, setFieldErrors] = useState<ApiFieldError[]>();
+  const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
   if (!open) {
     return (
@@ -116,6 +121,7 @@ function ReplaceSecretForm({
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setFieldErrors(undefined);
+    setErrorMessage(undefined);
     try {
       await replaceConnectionSecret(connection.id, auth);
       setOpen(false);
@@ -124,6 +130,9 @@ function ReplaceSecretForm({
     } catch (error) {
       if (error instanceof ApiError) {
         setFieldErrors(error.fields);
+        setErrorMessage(error.fields ? undefined : error.message);
+      } else {
+        setErrorMessage(GENERIC_ERROR_MESSAGE);
       }
     }
   }
@@ -138,6 +147,7 @@ function ReplaceSecretForm({
           fieldErrors={fieldErrors}
         />
       ) : null}
+      {errorMessage ? <p role="alert">{errorMessage}</p> : null}
       <button type="submit">Salvar credencial</button>
     </form>
   );
@@ -147,6 +157,7 @@ export default function ConnectionsRoute() {
   const [connections, setConnections] = useState<ConnectionSummary[]>();
   const [connectors, setConnectors] = useState<ConnectorSummary[]>();
   const [revokeMessage, setRevokeMessage] = useState<string | undefined>();
+  const [actionError, setActionError] = useState<string | undefined>();
 
   const reload = useCallback(async () => {
     const [connectionsResult, connectorsResult] = await Promise.all([listConnections(), getConnectors()]);
@@ -159,14 +170,24 @@ export default function ConnectionsRoute() {
   }, [reload]);
 
   async function handleRevoke(id: string): Promise<void> {
-    const result = await revokeConnection(id);
-    setRevokeMessage(`Conexão revogada. ${result.pausedInstanceCount} serviços foram pausados.`);
-    await reload();
+    setActionError(undefined);
+    try {
+      const result = await revokeConnection(id);
+      setRevokeMessage(`Conexão revogada. ${result.pausedInstanceCount} serviços foram pausados.`);
+      await reload();
+    } catch (error) {
+      setActionError(error instanceof ApiError ? error.message : GENERIC_ERROR_MESSAGE);
+    }
   }
 
   async function handleCheck(id: string): Promise<void> {
-    await checkConnection(id);
-    await reload();
+    setActionError(undefined);
+    try {
+      await checkConnection(id);
+      await reload();
+    } catch (error) {
+      setActionError(error instanceof ApiError ? error.message : GENERIC_ERROR_MESSAGE);
+    }
   }
 
   if (!connections || !connectors) {
@@ -177,6 +198,7 @@ export default function ConnectionsRoute() {
     <section>
       <h1>Conexões</h1>
       {revokeMessage ? <p role="status">{revokeMessage}</p> : null}
+      {actionError ? <p role="alert">{actionError}</p> : null}
 
       <ul>
         {connections.map((connection) => {

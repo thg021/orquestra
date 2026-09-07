@@ -40,11 +40,14 @@ async function evaluateInstanceActivation(tenantId: string, instance: ServiceIns
         };
       }
       const connection = await withTenant(tenantId, (tx) => findConnectorConnectionById(binding.connectionId, tx));
+      // Falha fechado: um binding sem conexão correspondente (não deveria acontecer —
+      // conexão nunca é apagada de verdade — mas se acontecer, não é seguro assumir
+      // "ativa" sem prova) trata como revogada, nunca como ativa por omissão.
       return {
         capability: requirement.capability,
         required: requirement.required,
         connectionId: binding.connectionId,
-        connectionStatus: connection?.status === "revoked" ? "revoked" : "active"
+        connectionStatus: connection && connection.status !== "revoked" ? "active" : "revoked"
       };
     })
   );
