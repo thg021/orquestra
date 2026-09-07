@@ -5,10 +5,12 @@ import request from "supertest";
 import {
   closeDefaultPool,
   withTenant,
+  withoutTenant,
+  identitySchema,
   insertConnectorConnection,
   listBindingsByInstance
 } from "@orquestra/db";
-import { hashPassword } from "@orquestra/core";
+import { hashPassword, newId } from "@orquestra/core";
 import { bootstrap } from "../../src/bootstrap";
 import { createTenantWithOwner } from "../../src/identity/identity.repository";
 import { createSession } from "../../src/auth/session.repository";
@@ -52,6 +54,21 @@ describe("BindingsController", () => {
     });
     const session = await createSession({ userId: created.userId, tenantId: created.tenantId, ttlMs: ONE_DAY_MS });
     return { tenantId: created.tenantId, cookie: cookieHeader(session.token) };
+  }
+
+  async function seedOperatorInTenant(tenantId: string): Promise<{ cookie: string }> {
+    const passwordHash = await hashPassword(PASSWORD, PASSWORD_COST);
+    const userId = newId();
+    await withoutTenant(async (tx) => {
+      await tx.insert(identitySchema.users).values({
+        id: userId,
+        email: `operator-${userId}@exemplo.com`,
+        passwordHash
+      });
+      await tx.insert(identitySchema.memberships).values({ id: newId(), tenantId, userId, role: "operator" });
+    });
+    const session = await createSession({ userId, tenantId, ttlMs: ONE_DAY_MS });
+    return { cookie: cookieHeader(session.token) };
   }
 
   async function seedInstance(tenantId: string, cookie: string): Promise<string> {
@@ -210,5 +227,33 @@ describe("BindingsController", () => {
       .send({ connectionId });
 
     expect(response.status).toBe(404);
+  });
+
+  it("operator recebe 403 (distinto de 401) ao tentar ligar ou desligar capability", async () => {
+    const { tenantId, cookie: ownerCookie } = await seedOwner();
+    const { cookie: operatorCookie } = await seedOperatorInTenant(tenantId);
+    const instanceId = await seedInstance(tenantId, ownerCookie);
+    const connectionId = await seedConnection(tenantId, "platform-upload");
+
+    const bindAttempt = await request(app.getHttpServer())
+      .put(`/service-instances/${instanceId}/bindings/file-storage`)
+      .set("Cookie", operatorCookie)
+      .send({ connectionId });
+    expect(bindAttempt.status).toBe(403);
+    expect(bindAttempt.body.code).toBe("INSUFFICIENT_ROLE");
+
+    // Owner liga de verdade, pra testar a negação do unbind sobre um vínculo real.
+    await request(app.getHttpServer())
+      .put(`/service-instances/${instanceId}/bindings/file-storage`)
+      .set("Cookie", ownerCookie)
+      .send({ connectionId });
+
+    const unbindAttempt = await request(app.getHttpServer())
+      .delete(`/service-instances/${instanceId}/bindings/file-storage`)
+      .set("Cookie", operatorCookie);
+    expect(unbindAttempt.status).toBe(403);
+
+    const bindings = await withTenant(tenantId, (tx) => listBindingsByInstance(instanceId, tx));
+    expect(bindings).toHaveLength(1); // nenhuma das duas tentativas do operator surtiu efeito
   });
 });

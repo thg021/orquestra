@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 14 de 25 tasks (T1 a T14 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
+**Status:** Em andamento — 15 de 25 tasks (T1 a T15 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -357,8 +357,10 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `operator` recebe 403 ao criar conexão ou ativar instância, e 200 ao listar
-- [ ] O 403 de autorização continua distinto do 401 de autenticação
+- [x] `operator` recebe 403 ao criar conexão ou ativar instância, e 200 ao listar
+- [x] O 403 de autorização continua distinto do 401 de autenticação
+
+**Feito em 06/09/2026.** Auditoria confirmou que os decorators (`@RequireRole("admin")` nas rotas de escrita, `@Protected()` nas de leitura) já estavam corretos desde T11/T13/T14 — nenhum código de produção mudou. Faltava só cobertura de teste: adicionado um e2e de operator em `bindings.controller.e2e.test.ts` (bind/unbind → 403) e outro em `lifecycle.controller.e2e.test.ts` (activate/pause → 403), confirmando 403 distinto de 401 e que nenhuma tentativa do operator surte efeito.
 
 ---
 

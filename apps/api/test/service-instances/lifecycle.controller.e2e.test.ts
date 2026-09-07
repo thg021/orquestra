@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
-import { closeDefaultPool, withTenant, insertConnectorConnection } from "@orquestra/db";
-import { hashPassword } from "@orquestra/core";
+import { closeDefaultPool, withTenant, withoutTenant, identitySchema, insertConnectorConnection } from "@orquestra/db";
+import { hashPassword, newId } from "@orquestra/core";
 import { bootstrap } from "../../src/bootstrap";
 import { createTenantWithOwner } from "../../src/identity/identity.repository";
 import { createSession } from "../../src/auth/session.repository";
@@ -48,6 +48,21 @@ describe("lifecycle (activate/pause)", () => {
     });
     const session = await createSession({ userId: created.userId, tenantId: created.tenantId, ttlMs: ONE_DAY_MS });
     return { tenantId: created.tenantId, cookie: cookieHeader(session.token) };
+  }
+
+  async function seedOperatorInTenant(tenantId: string): Promise<{ cookie: string }> {
+    const passwordHash = await hashPassword(PASSWORD, PASSWORD_COST);
+    const userId = newId();
+    await withoutTenant(async (tx) => {
+      await tx.insert(identitySchema.users).values({
+        id: userId,
+        email: `operator-${userId}@exemplo.com`,
+        passwordHash
+      });
+      await tx.insert(identitySchema.memberships).values({ id: newId(), tenantId, userId, role: "operator" });
+    });
+    const session = await createSession({ userId, tenantId, ttlMs: ONE_DAY_MS });
+    return { cookie: cookieHeader(session.token) };
   }
 
   async function seedInstance(cookie: string, config: Record<string, unknown> = VALID_CONFIG): Promise<string> {
@@ -217,5 +232,35 @@ describe("lifecycle (activate/pause)", () => {
     expect(response.body.impediments).toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "CONFIG_INVALID" })])
     );
+  });
+
+  it("operator recebe 403 (distinto de 401) ao tentar ativar ou pausar", async () => {
+    const { tenantId, cookie: ownerCookie } = await seedOwner();
+    const { cookie: operatorCookie } = await seedOperatorInTenant(tenantId);
+    const instanceId = await seedInstance(ownerCookie);
+    const fileStorage = await seedConnection(tenantId, "platform-upload");
+    const email = await seedConnection(tenantId, "gmail");
+    await bind(ownerCookie, instanceId, "file-storage", fileStorage);
+    await bind(ownerCookie, instanceId, "email", email);
+
+    const activateAttempt = await request(app.getHttpServer())
+      .post(`/service-instances/${instanceId}/activate`)
+      .set("Cookie", operatorCookie);
+    expect(activateAttempt.status).toBe(403);
+    expect(activateAttempt.body.code).toBe("INSUFFICIENT_ROLE");
+
+    // Owner ativa de verdade, pra testar a negação do pause sobre uma instância ativa.
+    await request(app.getHttpServer()).post(`/service-instances/${instanceId}/activate`).set("Cookie", ownerCookie);
+
+    const pauseAttempt = await request(app.getHttpServer())
+      .post(`/service-instances/${instanceId}/pause`)
+      .set("Cookie", operatorCookie);
+    expect(pauseAttempt.status).toBe(403);
+
+    const stillActive = await request(app.getHttpServer())
+      .get(`/service-instances/${instanceId}`)
+      .set("Cookie", operatorCookie);
+    expect(stillActive.status).toBe(200); // operator lê normalmente
+    expect(stillActive.body.status).toBe("active"); // nenhuma tentativa do operator surtiu efeito
   });
 });
