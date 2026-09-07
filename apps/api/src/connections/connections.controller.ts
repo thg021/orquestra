@@ -15,7 +15,8 @@ import type { Request } from "express";
 import {
   createConnectionRequestSchema,
   replaceConnectionSecretRequestSchema,
-  type ConnectionSummary
+  type ConnectionSummary,
+  type RevokeConnectionResponse
 } from "@orquestra/contracts";
 import type { Vault } from "@orquestra/core";
 import { RequireRole } from "../auth/role.guard";
@@ -76,10 +77,10 @@ export class ConnectionsController {
   @Post(":id/revoke")
   @RequireRole("admin")
   @HttpCode(HttpStatus.OK)
-  async revoke(@Param("id") id: string, @Req() req: Request): Promise<ConnectionSummary> {
+  async revoke(@Param("id") id: string, @Req() req: Request): Promise<RevokeConnectionResponse> {
     const { tenantId } = getFullAuthContext(req);
-    const revoked = await revokeConnection(tenantId, id);
-    return toConnectionSummary(revoked);
+    const { connection, pausedInstanceCount } = await revokeConnection(tenantId, id);
+    return { ...toConnectionSummary(connection), pausedInstanceCount };
   }
 
   @Post(":id/check")

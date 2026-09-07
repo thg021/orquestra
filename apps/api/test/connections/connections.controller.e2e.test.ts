@@ -223,6 +223,7 @@ describe("ConnectionsController", () => {
       .set("Cookie", cookie);
     expect(revokeResponse.status).toBe(200);
     expect(revokeResponse.body.status).toBe("revoked");
+    expect(revokeResponse.body.pausedInstanceCount).toBe(1);
 
     const pausedInstance = await request(app.getHttpServer())
       .get(`/service-instances/${instance.body.id}`)
@@ -276,7 +277,10 @@ describe("ConnectionsController", () => {
 
     await request(app.getHttpServer()).post(`/service-instances/${instance.body.id}/activate`).set("Cookie", cookie);
 
-    await request(app.getHttpServer()).post(`/connections/${documentDelivery.body.id}/revoke`).set("Cookie", cookie);
+    const revokeOptional = await request(app.getHttpServer())
+      .post(`/connections/${documentDelivery.body.id}/revoke`)
+      .set("Cookie", cookie);
+    expect(revokeOptional.body.pausedInstanceCount).toBe(0);
 
     const stillActive = await request(app.getHttpServer())
       .get(`/service-instances/${instance.body.id}`)

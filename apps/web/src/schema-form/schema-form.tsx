@@ -67,11 +67,14 @@ export function SchemaForm({ schema, values, onChange, fieldErrors = [] }: Schem
             <label htmlFor={fieldId}>{label}</label>
 
             {property.secret ? (
+              // Sem `required` HTML: o campo sempre renderiza vazio de propósito (nunca
+              // recebe valor do servidor), então a validação nativa do navegador
+              // bloquearia o submit mesmo com um valor já digitado — quem valida
+              // presença de segredo é o servidor (422 AUTH_INVALID/CONFIG_INVALID).
               <input
                 id={fieldId}
                 type="password"
                 value=""
-                required={required}
                 autoComplete="new-password"
                 onChange={(event) => setField(name, event.target.value)}
               />

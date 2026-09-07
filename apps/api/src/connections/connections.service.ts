@@ -146,13 +146,19 @@ export async function replaceConnectionSecret(
  * pausa só quem perdeu uma capability OBRIGATÓRIA (design §Revogação) — quem usava
  * como opcional segue ativa.
  */
-export async function revokeConnection(tenantId: string, id: string): Promise<ConnectorConnectionRow> {
+export interface RevokeConnectionResult {
+  connection: ConnectorConnectionRow;
+  pausedInstanceCount: number;
+}
+
+export async function revokeConnection(tenantId: string, id: string): Promise<RevokeConnectionResult> {
   await getConnection(tenantId, id);
 
-  await withTenant(tenantId, async (tx) => {
+  const pausedInstanceCount = await withTenant(tenantId, async (tx) => {
     await revokeConnectorConnection(id, tx);
 
     const bindings = await listBindingsByConnection(id, tx);
+    let paused = 0;
     for (const binding of bindings) {
       const instance = await findServiceInstanceById(binding.serviceInstanceId, tx);
       if (!instance || instance.status !== "active") continue;
@@ -161,11 +167,14 @@ export async function revokeConnection(tenantId: string, id: string): Promise<Co
       const requirement = agent?.capabilities.find((candidate) => candidate.capability === binding.capability);
       if (requirement?.required) {
         await updateServiceInstanceStatus(instance.id, "paused", "conexão revogada", tx);
+        paused += 1;
       }
     }
+    return paused;
   });
 
-  return getConnection(tenantId, id);
+  const connection = await getConnection(tenantId, id);
+  return { connection, pausedInstanceCount };
 }
 
 /**

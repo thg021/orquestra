@@ -35,7 +35,13 @@ export {
   createConnectionRequestSchema,
   replaceConnectionSecretRequestSchema,
   connectionSummarySchema,
-  listConnectionsResponseSchema
+  listConnectionsResponseSchema,
+  revokeConnectionResponseSchema
 } from "./connections";
-export type { CreateConnectionRequest, ReplaceConnectionSecretRequest, ConnectionSummary } from "./connections";
+export type {
+  CreateConnectionRequest,
+  ReplaceConnectionSecretRequest,
+  ConnectionSummary,
+  RevokeConnectionResponse
+} from "./connections";
 

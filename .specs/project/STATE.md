@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável em execução; 21/25 tasks (T1 a T21 concluídas em 2026-09-06) — US1, US2 e US4 fechadas
+**Fase atual:** M1 — Núcleo plugável em execução; 22/25 tasks (T1 a T22 concluídas em 2026-09-06) — US1, US2 e US4 fechadas
 
 ## Decisões
 
@@ -39,6 +39,7 @@
 | D36 | 2026-09-06 | `Vault` nasce uma única vez por processo, via provider Nest (token `VAULT`) criado em `AppModule.register(config, kekSet)` a partir do `KekSet` já carregado no boot — primeira vez que o cofre entra em código HTTP (antes só o CLI de rotação usava `createVault`) | T16 |
 | D37 | 2026-09-06 | `GET /service-instances/:id/bindings` — rota que a spec não previa; o painel (T21) precisa saber o vínculo atual de cada capability e não havia como perguntar isso à API. Reaproveita `listBindingsByInstance` (T10) | T21 |
 | D38 | 2026-09-06 | Roteamento do painel trocou o catch-all `/*` → `AppRoute` por rotas aninhadas de verdade (`AppRoute` com `<Outlet/>`, filhas `catalog` e `service-instances/:id`) — precisava de mais de uma tela dentro do shell autenticado | T19 |
+| D39 | 2026-09-06 | `POST /connections/:id/revoke` devolve `pausedInstanceCount` — a spec só descrevia a mensagem ("Conexão revogada. N serviços foram pausados."), não o dado que ela precisa; sem isso o painel teria que reconstruir a contagem do zero (comparando listagens antes/depois) | T22 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |

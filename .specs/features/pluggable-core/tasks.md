@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 21 de 25 tasks (T1 a T21 concluídas em 06/09/2026) — US1, US2 e US4 fechadas
+**Status:** Em andamento — 22 de 25 tasks (T1 a T22 concluídas em 06/09/2026) — US1, US2 e US4 fechadas
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -491,9 +491,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Não existe elemento de interface que exiba ou solicite a leitura de um segredo
-- [ ] Revogar avisa quantos serviços foram pausados
-- [ ] Conexão nunca verificada é distinguível de verificada com falha
+- [x] Não existe elemento de interface que exiba ou solicite a leitura de um segredo
+- [x] Revogar avisa quantos serviços foram pausados
+- [x] Conexão nunca verificada é distinguível de verificada com falha
+
+**Feito em 06/09/2026.** `ConnectionsRoute` lista fornecedor (cruzando `connectorKey` com `GET /catalog/connectors`), `last4`, estado e a data da última verificação; criar/substituir credencial usam `SchemaForm` sobre o `auth_schema` do conector, então campo secreto nunca aparece nem é lido de volta — a UI só mostra `last4`. `POST /connections/:id/revoke` ganhou `pausedInstanceCount` na resposta (não existia — a spec só previa a mensagem, não o dado que ela precisa) pra virar "Conexão revogada. N serviços foram pausados." de verdade, não um texto fixo. "Nunca verificada" (`lastCheckAt === null`) é visualmente distinta de uma verificação já registrada (com data) — `failed` (que só o M3 vai produzir) já tem um rótulo próprio à espera.
 
 ---
 
