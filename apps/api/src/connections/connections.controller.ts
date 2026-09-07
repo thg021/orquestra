@@ -1,12 +1,28 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Inject, Post, Req } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Req
+} from "@nestjs/common";
 import type { Request } from "express";
-import { createConnectionRequestSchema, type ConnectionSummary } from "@orquestra/contracts";
+import {
+  createConnectionRequestSchema,
+  replaceConnectionSecretRequestSchema,
+  type ConnectionSummary
+} from "@orquestra/contracts";
 import type { Vault } from "@orquestra/core";
 import { RequireRole } from "../auth/role.guard";
 import { Protected } from "../auth/protected.decorator";
 import { getFullAuthContext } from "../auth/auth-context";
 import { VAULT } from "./connections.constants";
-import { installConnection, listAllConnections } from "./connections.service";
+import { installConnection, listAllConnections, replaceConnectionSecret, revokeConnection } from "./connections.service";
 import { toConnectionSummary } from "./to-summary";
 
 /** `owner`/`admin` escrevem; `operator` só lê — mesma convenção do resto do M1. */
@@ -33,5 +49,30 @@ export class ConnectionsController {
     const { tenantId } = getFullAuthContext(req);
     const rows = await listAllConnections(tenantId);
     return rows.map(toConnectionSummary);
+  }
+
+  @Patch(":id")
+  @RequireRole("admin")
+  async replaceSecret(
+    @Param("id") id: string,
+    @Body() body: unknown,
+    @Req() req: Request
+  ): Promise<ConnectionSummary> {
+    const parsed = replaceConnectionSecretRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({ code: "VALIDATION_ERROR" });
+    }
+    const { tenantId } = getFullAuthContext(req);
+    const updated = await replaceConnectionSecret(this.vault, tenantId, id, parsed.data.auth);
+    return toConnectionSummary(updated);
+  }
+
+  @Post(":id/revoke")
+  @RequireRole("admin")
+  @HttpCode(HttpStatus.OK)
+  async revoke(@Param("id") id: string, @Req() req: Request): Promise<ConnectionSummary> {
+    const { tenantId } = getFullAuthContext(req);
+    const revoked = await revokeConnection(tenantId, id);
+    return toConnectionSummary(revoked);
   }
 }

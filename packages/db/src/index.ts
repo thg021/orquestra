@@ -27,11 +27,14 @@ export {
   insertConnectorConnection,
   findConnectorConnectionById,
   findConnectorConnectionByName,
-  listConnectorConnections
+  listConnectorConnections,
+  updateConnectorConnectionSecret,
+  revokeConnectorConnection
 } from "./repositories/connector-connections.repository";
 export type {
   ConnectorConnectionRow,
-  InsertConnectorConnectionInput
+  InsertConnectorConnectionInput,
+  UpdateConnectorConnectionSecretInput
 } from "./repositories/connector-connections.repository";
 
 export {

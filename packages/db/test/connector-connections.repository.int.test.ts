@@ -7,7 +7,9 @@ import {
   insertConnectorConnection,
   findConnectorConnectionById,
   findConnectorConnectionByName,
-  listConnectorConnections
+  listConnectorConnections,
+  updateConnectorConnectionSecret,
+  revokeConnectorConnection
 } from "../src/repositories/connector-connections.repository";
 import { startTestDatabase, type TestDatabase } from "./support/test-database";
 
@@ -128,5 +130,75 @@ describe("connector-connections.repository", () => {
       pool
     );
     expect(notFoundOtherConnector).toBeUndefined();
+  });
+
+  it("updateSecret substitui os envelopes e o last4, preservando o resto", async () => {
+    const id = randomUUID();
+    await withTenant(
+      tenantA,
+      (tx) =>
+        insertConnectorConnection(
+          {
+            id,
+            tenantId: tenantA,
+            connectorKey: "platform-upload",
+            name: "conexão-substituível",
+            secretEnvelope: randomBytes(20),
+            dekEnvelope: randomBytes(20),
+            keyVersion: 1,
+            last4: "0000"
+          },
+          tx
+        ),
+      pool
+    );
+
+    const newSecretEnvelope = randomBytes(30);
+    const newDekEnvelope = randomBytes(30);
+    await withTenant(
+      tenantA,
+      (tx) =>
+        updateConnectorConnectionSecret(
+          id,
+          { secretEnvelope: newSecretEnvelope, dekEnvelope: newDekEnvelope, keyVersion: 2, last4: "9999" },
+          tx
+        ),
+      pool
+    );
+
+    const found = await withTenant(tenantA, (tx) => findConnectorConnectionById(id, tx), pool);
+    expect(found?.secretEnvelope.equals(newSecretEnvelope)).toBe(true);
+    expect(found?.dekEnvelope.equals(newDekEnvelope)).toBe(true);
+    expect(found?.keyVersion).toBe(2);
+    expect(found?.last4).toBe("9999");
+    expect(found?.name).toBe("conexão-substituível");
+  });
+
+  it("revoke marca status revoked e preenche revokedAt", async () => {
+    const id = randomUUID();
+    await withTenant(
+      tenantA,
+      (tx) =>
+        insertConnectorConnection(
+          {
+            id,
+            tenantId: tenantA,
+            connectorKey: "platform-upload",
+            name: "conexão-a-revogar",
+            secretEnvelope: randomBytes(20),
+            dekEnvelope: randomBytes(20),
+            keyVersion: 1,
+            last4: "0000"
+          },
+          tx
+        ),
+      pool
+    );
+
+    await withTenant(tenantA, (tx) => revokeConnectorConnection(id, tx), pool);
+
+    const found = await withTenant(tenantA, (tx) => findConnectorConnectionById(id, tx), pool);
+    expect(found?.status).toBe("revoked");
+    expect(found?.revokedAt).not.toBeNull();
   });
 });

@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 16 de 25 tasks (T1 a T16 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
+**Status:** Em andamento — 17 de 25 tasks (T1 a T17 concluídas em 06/09/2026) — US1 e US4 fechadas; US2 com backend pronto, falta o painel (T19-T21)
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -395,10 +395,12 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Revogação nunca é bloqueada por dependência
-- [ ] Instância que perdeu obrigatória fica `paused` com `status_reason` preenchido; a que perdeu opcional segue ativa
-- [ ] Substituir credencial mantém os vínculos existentes
-- [ ] Nenhuma rota oferece caminho para ler o segredo
+- [x] Revogação nunca é bloqueada por dependência
+- [x] Instância que perdeu obrigatória fica `paused` com `status_reason` preenchido; a que perdeu opcional segue ativa
+- [x] Substituir credencial mantém os vínculos existentes
+- [x] Nenhuma rota oferece caminho para ler o segredo
+
+**Feito em 06/09/2026.** `PATCH /connections/:id` (troca só o segredo, mesmo `id`, vínculos intactos porque nunca são tocados) e `POST /connections/:id/revoke`. A revogação roda tudo numa única transação (`withTenant`): marca a conexão `revoked`, acha as instâncias ligadas via `listBindingsByConnection` (índice que já existia desde T10) e, para cada uma ativa, decide pausar olhando só se a capability daquele binding é obrigatória para o agente — não precisou reusar o gate de ativação inteiro (T12), a pergunta aqui é mais simples que "a instância pode ativar?". `status_reason` grava o texto fixo do design (`"conexão revogada"`).
 
 ---
 

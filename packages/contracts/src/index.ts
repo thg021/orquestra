@@ -29,8 +29,9 @@ export { bindCapabilityRequestSchema } from "./bindings";
 export type { BindCapabilityRequest } from "./bindings";
 export {
   createConnectionRequestSchema,
+  replaceConnectionSecretRequestSchema,
   connectionSummarySchema,
   listConnectionsResponseSchema
 } from "./connections";
-export type { CreateConnectionRequest, ConnectionSummary } from "./connections";
+export type { CreateConnectionRequest, ReplaceConnectionSecretRequest, ConnectionSummary } from "./connections";
 

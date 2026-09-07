@@ -1,11 +1,16 @@
 import { UnprocessableEntityException } from "@nestjs/common";
-import { CONNECTORS } from "@orquestra/catalog";
+import { findAgentDefinition, CONNECTORS } from "@orquestra/catalog";
 import {
   withTenant,
   insertConnectorConnection,
   findConnectorConnectionById,
   findConnectorConnectionByName,
   listConnectorConnections,
+  updateConnectorConnectionSecret,
+  revokeConnectorConnection,
+  findServiceInstanceById,
+  updateServiceInstanceStatus,
+  listBindingsByConnection,
   type ConnectorConnectionRow
 } from "@orquestra/db";
 import { newId, type Vault } from "@orquestra/core";
@@ -31,31 +36,11 @@ function assertValidAuth(connector: (typeof CONNECTORS)[number], auth: unknown):
   return parsed.data as Record<string, unknown>;
 }
 
-/**
- * Separa o que vai cifrado (secretFields) do que fica legível em `metadata`
- * (metadataFields) — a marca `secret()` no catálogo decide, nunca o nome do campo.
- * Nome duplicado é checado ANTES de qualquer cifragem (SEC-05): não vale a pena
- * cifrar um segredo que a inserção vai recusar de qualquer jeito.
- */
-export async function installConnection(
-  vault: Vault,
-  tenantId: string,
-  input: CreateConnectionInput
-): Promise<ConnectorConnectionRow> {
-  const connector = CONNECTORS.find((candidate) => candidate.key === input.connectorKey);
-  if (!connector) {
-    throw new ConnectorNotFoundError(input.connectorKey);
-  }
-
-  const existing = await withTenant(tenantId, (tx) =>
-    findConnectorConnectionByName(connector.key, input.name, tx)
-  );
-  if (existing) {
-    throw new ConnectionNameDuplicateError();
-  }
-
-  const auth = assertValidAuth(connector, input.auth);
-
+/** Separa o que vai cifrado (secretFields) do que fica legível em `metadata` (metadataFields) — a marca `secret()` no catálogo decide, nunca o nome do campo. */
+function splitAuth(
+  connector: (typeof CONNECTORS)[number],
+  auth: Record<string, unknown>
+): { metadata: Record<string, unknown>; secretValues: Record<string, unknown>; primarySecretValue: string } {
   const metadata: Record<string, unknown> = {};
   for (const field of connector.metadataFields) {
     metadata[field] = auth[field];
@@ -66,9 +51,41 @@ export async function installConnection(
     secretValues[field] = auth[field];
   }
 
+  const primarySecretValue = String(auth[connector.secretFields[0] as string]);
+  return { metadata, secretValues, primarySecretValue };
+}
+
+function findConnector(connectorKey: string): (typeof CONNECTORS)[number] {
+  const connector = CONNECTORS.find((candidate) => candidate.key === connectorKey);
+  if (!connector) {
+    throw new ConnectorNotFoundError(connectorKey);
+  }
+  return connector;
+}
+
+/**
+ * Nome duplicado é checado ANTES de qualquer cifragem (SEC-05): não vale a pena
+ * cifrar um segredo que a inserção vai recusar de qualquer jeito.
+ */
+export async function installConnection(
+  vault: Vault,
+  tenantId: string,
+  input: CreateConnectionInput
+): Promise<ConnectorConnectionRow> {
+  const connector = findConnector(input.connectorKey);
+
+  const existing = await withTenant(tenantId, (tx) =>
+    findConnectorConnectionByName(connector.key, input.name, tx)
+  );
+  if (existing) {
+    throw new ConnectionNameDuplicateError();
+  }
+
+  const auth = assertValidAuth(connector, input.auth);
+  const { metadata, secretValues, primarySecretValue } = splitAuth(connector, auth);
+
   const id = newId();
   const sealed = vault.seal(tenantId, id, JSON.stringify(secretValues));
-  const primarySecretValue = String(auth[connector.secretFields[0] as string]);
 
   await withTenant(tenantId, (tx) =>
     insertConnectorConnection(
@@ -86,6 +103,66 @@ export async function installConnection(
       tx
     )
   );
+
+  return getConnection(tenantId, id);
+}
+
+/** PATCH (ROT-03): troca só o segredo — nome e vínculos existentes ficam intactos (o `id` não muda). */
+export async function replaceConnectionSecret(
+  vault: Vault,
+  tenantId: string,
+  id: string,
+  auth: Record<string, unknown>
+): Promise<ConnectorConnectionRow> {
+  const existing = await getConnection(tenantId, id);
+  const connector = findConnector(existing.connectorKey);
+
+  const validatedAuth = assertValidAuth(connector, auth);
+  const { metadata, secretValues, primarySecretValue } = splitAuth(connector, validatedAuth);
+
+  const sealed = vault.seal(tenantId, id, JSON.stringify(secretValues));
+
+  await withTenant(tenantId, (tx) =>
+    updateConnectorConnectionSecret(
+      id,
+      {
+        secretEnvelope: sealed.secretEnvelope,
+        dekEnvelope: sealed.dekEnvelope,
+        keyVersion: sealed.keyVersion,
+        last4: primarySecretValue.slice(-4),
+        metadata
+      },
+      tx
+    )
+  );
+
+  return getConnection(tenantId, id);
+}
+
+/**
+ * Revogação (ROT-01, ROT-02) — nunca bloqueada por dependência. Tudo numa única
+ * transação: revoga a conexão e, para cada instância ativa que dependia dela,
+ * pausa só quem perdeu uma capability OBRIGATÓRIA (design §Revogação) — quem usava
+ * como opcional segue ativa.
+ */
+export async function revokeConnection(tenantId: string, id: string): Promise<ConnectorConnectionRow> {
+  await getConnection(tenantId, id);
+
+  await withTenant(tenantId, async (tx) => {
+    await revokeConnectorConnection(id, tx);
+
+    const bindings = await listBindingsByConnection(id, tx);
+    for (const binding of bindings) {
+      const instance = await findServiceInstanceById(binding.serviceInstanceId, tx);
+      if (!instance || instance.status !== "active") continue;
+
+      const agent = findAgentDefinition(instance.agentKey, instance.agentVersion);
+      const requirement = agent?.capabilities.find((candidate) => candidate.capability === binding.capability);
+      if (requirement?.required) {
+        await updateServiceInstanceStatus(instance.id, "paused", "conexão revogada", tx);
+      }
+    }
+  });
 
   return getConnection(tenantId, id);
 }

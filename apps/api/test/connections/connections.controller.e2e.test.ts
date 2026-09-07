@@ -165,6 +165,125 @@ describe("ConnectionsController", () => {
     );
   });
 
+  it("PATCH substitui o segredo mantendo nome e id (T17, ROT-03)", async () => {
+    const { cookie } = await seedOwner();
+    const name = `Conexão ${randomUUID()}`;
+
+    const created = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "platform-upload", name, auth: { apiKey: "chave-original-1111" } });
+
+    const patched = await request(app.getHttpServer())
+      .patch(`/connections/${created.body.id}`)
+      .set("Cookie", cookie)
+      .send({ auth: { apiKey: "chave-nova-2222" } });
+
+    expect(patched.status).toBe(200);
+    expect(patched.body.id).toBe(created.body.id);
+    expect(patched.body.name).toBe(name);
+    expect(patched.body.last4).toBe("2222");
+    expect(JSON.stringify(patched.body)).not.toContain("chave-nova-2222");
+  });
+
+  it("revoga sem bloqueio, pausa instância que perdeu capability obrigatória e mantém ativa a que perdeu opcional", async () => {
+    const { cookie } = await seedOwner();
+
+    const connection = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "platform-upload", name: `Conexão ${randomUUID()}`, auth: { apiKey: "chave-req" } });
+    const email = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "gmail", name: `Email ${randomUUID()}`, auth: { refreshToken: "token-req" } });
+
+    const instance = await request(app.getHttpServer())
+      .post("/service-instances")
+      .set("Cookie", cookie)
+      .send({
+        agentKey: "accounting-routine",
+        name: `Instância ${randomUUID()}`,
+        config: { signature: "X", defaultDeadline: "dia 20", defaultCc: [] }
+      });
+
+    await request(app.getHttpServer())
+      .put(`/service-instances/${instance.body.id}/bindings/file-storage`)
+      .set("Cookie", cookie)
+      .send({ connectionId: connection.body.id });
+    await request(app.getHttpServer())
+      .put(`/service-instances/${instance.body.id}/bindings/email`)
+      .set("Cookie", cookie)
+      .send({ connectionId: email.body.id });
+
+    await request(app.getHttpServer()).post(`/service-instances/${instance.body.id}/activate`).set("Cookie", cookie);
+
+    const revokeResponse = await request(app.getHttpServer())
+      .post(`/connections/${connection.body.id}/revoke`)
+      .set("Cookie", cookie);
+    expect(revokeResponse.status).toBe(200);
+    expect(revokeResponse.body.status).toBe("revoked");
+
+    const pausedInstance = await request(app.getHttpServer())
+      .get(`/service-instances/${instance.body.id}`)
+      .set("Cookie", cookie);
+    expect(pausedInstance.body.status).toBe("paused");
+    expect(pausedInstance.body.statusReason).toBe("conexão revogada");
+  });
+
+  it("revoga uma conexão ligada só a capability opcional, e a instância segue ativa", async () => {
+    const { cookie } = await seedOwner();
+
+    const fileStorage = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "platform-upload", name: `Conexão ${randomUUID()}`, auth: { apiKey: "chave-req-2" } });
+    const email = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({ connectorKey: "gmail", name: `Email ${randomUUID()}`, auth: { refreshToken: "token-req-2" } });
+    // document-delivery é opcional para o agente contábil.
+    const documentDelivery = await request(app.getHttpServer())
+      .post("/connections")
+      .set("Cookie", cookie)
+      .send({
+        connectorKey: "fortes-conecta",
+        name: `Fortes ${randomUUID()}`,
+        auth: { baseUrl: "https://conecta.fortestecnologia.com.br", apiKey: "chave-opcional" }
+      });
+
+    const instance = await request(app.getHttpServer())
+      .post("/service-instances")
+      .set("Cookie", cookie)
+      .send({
+        agentKey: "accounting-routine",
+        name: `Instância ${randomUUID()}`,
+        config: { signature: "X", defaultDeadline: "dia 20", defaultCc: [] }
+      });
+
+    await request(app.getHttpServer())
+      .put(`/service-instances/${instance.body.id}/bindings/file-storage`)
+      .set("Cookie", cookie)
+      .send({ connectionId: fileStorage.body.id });
+    await request(app.getHttpServer())
+      .put(`/service-instances/${instance.body.id}/bindings/email`)
+      .set("Cookie", cookie)
+      .send({ connectionId: email.body.id });
+    await request(app.getHttpServer())
+      .put(`/service-instances/${instance.body.id}/bindings/document-delivery`)
+      .set("Cookie", cookie)
+      .send({ connectionId: documentDelivery.body.id });
+
+    await request(app.getHttpServer()).post(`/service-instances/${instance.body.id}/activate`).set("Cookie", cookie);
+
+    await request(app.getHttpServer()).post(`/connections/${documentDelivery.body.id}/revoke`).set("Cookie", cookie);
+
+    const stillActive = await request(app.getHttpServer())
+      .get(`/service-instances/${instance.body.id}`)
+      .set("Cookie", cookie);
+    expect(stillActive.body.status).toBe("active");
+  });
+
   it("operator recebe 403 ao criar, e 200 ao listar", async () => {
     const { tenantId } = await seedOwner();
     const { cookie: operatorCookie } = await seedOperatorInTenant(tenantId);

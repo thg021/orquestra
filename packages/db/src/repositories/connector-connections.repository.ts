@@ -71,6 +71,39 @@ export async function findConnectorConnectionByName(
   return rows[0] as ConnectorConnectionRow | undefined;
 }
 
+export interface UpdateConnectorConnectionSecretInput {
+  secretEnvelope: Buffer;
+  dekEnvelope: Buffer;
+  keyVersion: number;
+  last4: string;
+  metadata?: unknown;
+}
+
+/** PATCH de credencial (T17, ROT-03) — troca só o segredo; nome e vínculos ficam intactos. */
+export async function updateConnectorConnectionSecret(
+  id: string,
+  input: UpdateConnectorConnectionSecretInput,
+  tx: Tx
+): Promise<void> {
+  const changes: Record<string, unknown> = {
+    secretEnvelope: input.secretEnvelope,
+    dekEnvelope: input.dekEnvelope,
+    keyVersion: input.keyVersion,
+    last4: input.last4,
+    updatedAt: new Date()
+  };
+  if (input.metadata !== undefined) changes.metadata = input.metadata;
+  await tx.update(connectorConnections).set(changes).where(eq(connectorConnections.id, id));
+}
+
+/** Revogação (ROT-01, ROT-02) — nunca é bloqueada por dependência (design §Revogação). */
+export async function revokeConnectorConnection(id: string, tx: Tx): Promise<void> {
+  await tx
+    .update(connectorConnections)
+    .set({ status: "revoked", revokedAt: new Date(), updatedAt: new Date() })
+    .where(eq(connectorConnections.id, id));
+}
+
 export async function listConnectorConnections(tx: Tx): Promise<ConnectorConnectionRow[]> {
   const rows = await tx.select().from(connectorConnections);
   return rows as ConnectorConnectionRow[];

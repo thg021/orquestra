@@ -9,6 +9,11 @@ export const createConnectionRequestSchema = z.object({
 });
 export type CreateConnectionRequest = z.infer<typeof createConnectionRequestSchema>;
 
+export const replaceConnectionSecretRequestSchema = z.object({
+  auth: z.record(z.string(), z.unknown()).default({})
+});
+export type ReplaceConnectionSecretRequest = z.infer<typeof replaceConnectionSecretRequestSchema>;
+
 export const connectionSummarySchema = z.object({
   id: z.string(),
   connectorKey: z.string(),
