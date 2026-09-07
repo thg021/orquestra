@@ -3,7 +3,7 @@
 **Design:** `.specs/features/pluggable-core/design.md`
 **Spec:** `.specs/features/pluggable-core/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 23 de 25 tasks (T1 a T23 concluídas em 06/09/2026) — US1, US2 e US4 fechadas
+**Status:** Em andamento — 24 de 25 tasks (T1 a T24 concluídas em 06/09/2026) — US1, US2 e US4 fechadas
 
 25 tasks. Uma entrega por task, com teste co-locado.
 
@@ -529,9 +529,11 @@ Nota sobre o `pnpm run test:int` completo: rodando o monorepo inteiro de uma vez
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] As três tabelas novas aparecem cobertas pelo teste de introspecção sem edição dele
-- [ ] Rotação executada de ponta a ponta com conexões nas duas versões legíveis
-- [ ] Envelope movido entre tenants no banco não decifra
+- [x] As três tabelas novas aparecem cobertas pelo teste de introspecção sem edição dele
+- [x] Rotação executada de ponta a ponta com conexões nas duas versões legíveis
+- [x] Envelope movido entre tenants no banco não decifra
+
+**Feito em 06/09/2026.** As duas primeiras condições já valiam desde T8/T10 sem tocar em nada: `rls-coverage.int.test.ts` (M0) varre por introspecção toda tabela com `tenant_id`, então `service_instances`/`connector_connections`/`connector_bindings` entraram sozinhas; `kek-rotate.int.test.ts` (T8) já tem o teste "interromper no meio deixa as duas versões convivendo, ambas legíveis" — rodei os dois de novo só pra confirmar. Faltava a terceira: `tenant-isolation-m1.int.test.ts` (novo) lê os bytes reais de `secret_envelope`/`dek_envelope` de uma conexão de verdade no Postgres (via client de introspecção, sem RLS) e mostra que abrem sob o tenant certo mas falham (`OpenError`) sob outro — não é só o teste em memória do cofre (T6), é a prova de ponta a ponta com um envelope que passou pelo banco de verdade.
 
 ---
 
