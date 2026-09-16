@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^10.16.0",
+    "@testcontainers/redis": "^10.16.0",
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.0",
     "@types/pg": "^8.11.10",

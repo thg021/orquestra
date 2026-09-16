@@ -63,6 +63,28 @@ services:
       redis:
         condition: service_healthy
 
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://orquestra_app:${ORQUESTRA_APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_MIGRATION_URL: postgres://orquestra_owner:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+      SESSION_SECRET: ${SESSION_SECRET}
+      API_PORT: ${API_PORT:-3000}
+      PROCESS_ROLE: worker
+      KEK_DIR: /run/secrets/kek
+    secrets:
+      - source: kek_v1
+        target: kek/1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   web:
     build:
       context: ..

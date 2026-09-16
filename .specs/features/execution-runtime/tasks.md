@@ -172,9 +172,9 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `PROCESS_ROLE=worker` sobe consumindo a fila e não abre porta HTTP
-- [ ] O worker aparece no compose como serviço próprio, mesma imagem da API
-- [ ] Encerrar o processo espera o job em andamento terminar antes de sair
+- [x] `PROCESS_ROLE=worker` sobe consumindo a fila e não abre porta HTTP
+- [x] O worker aparece no compose como serviço próprio, mesma imagem da API
+- [x] Encerrar o processo espera o job em andamento terminar antes de sair
 
 ---
 
