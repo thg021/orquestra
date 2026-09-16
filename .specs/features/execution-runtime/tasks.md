@@ -155,9 +155,9 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] O tipo do job só admite `tenantId`, `serviceInstanceId`, `runId` e `trigger` — ausência no tipo, não disciplina de quem chama
-- [ ] Existe teste que serializa um job e falha se aparecer qualquer campo além desses
-- [ ] Perder a conexão com o Redis não derruba o processo `api`
+- [x] O tipo do job só admite `tenantId`, `serviceInstanceId`, `runId` e `trigger` — ausência no tipo, não disciplina de quem chama
+- [x] Existe teste que serializa um job e falha se aparecer qualquer campo além desses
+- [x] Perder a conexão com o Redis não derruba o processo `api`
 
 ---
 

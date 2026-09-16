@@ -1,7 +1,7 @@
 # State
 
-**Última atualização:** 2026-09-06
-**Fase atual:** M1 — Núcleo plugável concluído em 2026-09-06 (25/25 tasks, T1 a T25) — US1, US2 e US4 fechadas. Próximo: M2 — Runtime de execução.
+**Última atualização:** 2026-09-16
+**Fase atual:** M2 — Runtime de execução, em andamento. T1 a T4 concluídas (tabelas do runtime, repositórios de execução/aprovação/recibo/agendamento, fila e contrato do job). Próximo: T5 — papel de processo `worker`.
 
 ## Decisões
 
@@ -45,6 +45,7 @@
 | D41 | 2026-09-07 | CRUD do cadastro de clientes (collection `customers`, sucessor do `clientes.yaml`) entra no M4, junto do agente contábil — não no M2. O M2 semeia dado por CLI/seed nos testes, sem tela | M4 |
 | D39 | 2026-09-06 | `POST /connections/:id/revoke` devolve `pausedInstanceCount` — a spec só descrevia a mensagem ("Conexão revogada. N serviços foram pausados."), não o dado que ela precisa; sem isso o painel teria que reconstruir a contagem do zero (comparando listagens antes/depois) | T22 |
 | D44 | 2026-09-07 | `cron-parser` como dependência nova (em `packages/core`) para calcular a próxima ocorrência de uma expressão cron respeitando fuso horário. Sem ela, `computeNextRunAt` reimplementaria aritmética de calendário — risco alto de acertar o caso comum e errar borda de DST/mudança de mês | T3 |
+| D45 | 2026-09-16 | `bullmq` + `ioredis` como dependências novas em `apps/api`, para a fila de execução. O job carrega só `{tenantId, serviceInstanceId, runId, trigger}`, montado campo a campo (nunca `...spread`) para que um campo extra não sobreviva à serialização. A conexão Redis nasce com listener de erro próprio — perder o Redis não derruba o processo `api` | T4 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |
