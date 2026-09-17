@@ -298,9 +298,11 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Interrupt salva checkpoint, cria o pedido com o payload e move o run
-- [ ] Um run em `awaiting_approval` não é retomado por reentrega da fila — só por decisão
-- [ ] O payload do pedido não carrega segredo
+- [x] Interrupt salva checkpoint, cria o pedido com o payload e move o run
+- [x] Um run em `awaiting_approval` não é retomado por reentrega da fila — só por decisão
+- [x] O payload do pedido não carrega segredo
+
+**Feito em 17/09/2026.** `executeGraph`/`runAgentGraph` trocaram `Promise<void>` por `Promise<GraphRunOutcome>` (`{status:"completed"}` ou `{status:"interrupted", payload}`) — é o sinal que faltava pro chamador distinguir "terminou" de "pausou pedindo aprovação". O payload é lido do chunk `{[INTERRUPT]: Interrupt[]}` do LangGraph (`INTERRUPT` = `"__interrupt__"`, exportado pela lib), pegando só `interrupts[0]?.value` — nunca o estado do grafo. Fronteira nova, `apps/api/src/execution/approval.service.ts`: só ele sabe de `ApprovalRequest`/status do run (`requestApproval` cria o pedido `pending` com `createApprovalRequest` e transiciona pra `awaiting_approval` com `transitionServiceRunStatus`, ambos já prontos da T3); `graph-runner.ts` continua sem saber que `ApprovalRequest` existe. `run-executor.ts` é quem liga os dois: se o outcome é `interrupted`, chama `requestApproval` em vez de marcar `succeeded`. O segundo "Done when" (reentrega não retoma run pausado) não dependia de `transitionServiceRunStatus`/`IllegalRunTransitionError` — aquilo só impede *sair* de `succeeded`/`failed`, e `awaiting_approval` não é um desses. A guarda é do worker: `SKIP_STATUSES` (novo, `FINAL_STATUSES` + `"awaiting_approval"`) substitui o antigo `FINAL_STATUSES` na checagem de entrada de `executeRunJob`, então uma reentrega de job pra um run em `awaiting_approval` retorna sem tocar no grafo nem no run. Payload sem segredo (terceiro item) não pede transformação nenhuma em T12: o valor já é só o que o agente passa pro `interrupt(...)` (D40 — plano de entrega nunca carrega segredo); o teste de `approval.service.int.test.ts` prova que o payload gravado é exatamente esse subconjunto, sem o estado do grafo grudado.
 
 ---
 

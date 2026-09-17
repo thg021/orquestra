@@ -173,12 +173,30 @@ describe("execution/graph-runner", () => {
     );
     const run = await seedRun(tenantA, instanceId);
 
-    // Não lança — pausar por interrupt não é falha (T12 decide o que fazer com a pausa).
-    await expect(withTenant(tenantA, (tx) => runAgentGraph(tenantA, run, tx))).resolves.toBeUndefined();
+    // Não lança — pausar por interrupt não é falha. O outcome sinaliza a pausa e
+    // carrega exatamente o valor passado a `interrupt(...)` no nó `requestApproval`
+    // (T12): nunca o estado inteiro do grafo, só o que o agente decidiu expor.
+    const outcome = await withTenant(tenantA, (tx) => runAgentGraph(tenantA, run, tx));
+    expect(outcome).toEqual({
+      status: "interrupted",
+      payload: { plan: "entregar 1 item de exercício" }
+    });
 
     const steps = await withTenant(tenantA, (tx) => listRunSteps(run.id, tx));
     expect(steps).toHaveLength(1);
     expect(steps[0]).toMatchObject({ status: "succeeded", detail: { node: "prepare" } });
+
+    // O checkpoint de `prepare` sobreviveu à pausa — é o que a retomada (T14) vai
+    // carregar depois da decisão humana.
+    const checkpointCount = await withTenant(tenantA, async (tx) => {
+      const saver = createCheckpointSaver(tenantA, tx);
+      let count = 0;
+      for await (const tuple of saver.list({ configurable: { thread_id: run.id } })) {
+        if (tuple) count += 1;
+      }
+      return count;
+    });
+    expect(checkpointCount).toBeGreaterThan(0);
   });
 
   it("retomada: nó já concluído não roda de novo, e não ganha um segundo RunStep", async () => {

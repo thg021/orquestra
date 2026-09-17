@@ -8,8 +8,17 @@ import {
   type Tx
 } from "@orquestra/db";
 import { findAgentDefinition, type AgentGraphFactory } from "@orquestra/catalog";
+import { INTERRUPT, type Interrupt } from "@langchain/langgraph";
 import { evaluateInstanceActivation } from "../service-instances/lifecycle.service";
 import type { GateImpediment } from "@orquestra/core";
+
+/**
+ * T12: o que `executeGraph`/`runAgentGraph` devolvem no lugar de `void` — quem chama
+ * precisa distinguir "terminou" de "pausou pedindo aprovação" (APR-01). `payload` é
+ * exatamente o valor passado para `interrupt(valor)` dentro do nó do agente — nunca o
+ * estado inteiro do grafo.
+ */
+export type GraphRunOutcome = { status: "completed" } | { status: "interrupted"; payload: unknown };
 
 export class ServiceInstanceNotFoundError extends Error {
   constructor(serviceInstanceId: string) {
@@ -63,9 +72,14 @@ function sanitizeGraphError(error: unknown): string {
  * de `(run_id, seq)`.
  *
  * Cada chunk do `stream` em modo `updates` é `{ [nó]: estado-parcial }` — exceto
- * quando o grafo pausa por `interrupt()`, cuja chave é `__interrupt__`. Isso não é um
- * nó que terminou (não gera `RunStep`) nem uma falha (T12 decide o que fazer com a
- * pausa; este código só precisa não quebrar).
+ * quando o grafo pausa por `interrupt()`, cuja chave é `__interrupt__` (a constante
+ * `INTERRUPT` exportada por `@langchain/langgraph`). Isso não é um nó que terminou
+ * (não gera `RunStep`) nem uma falha — é sinalizado no retorno como
+ * `{ status: "interrupted", payload }`, e quem decide o que fazer com a pausa (nascer
+ * `ApprovalRequest`, mover o run) é o `run-executor` via `approval.service.ts` (T12).
+ * Se a lib entregar mais de um interrupt no mesmo chunk (não acontece hoje — o
+ * `exercise` só tem um — mas a assinatura da lib permite array), só o primeiro vira o
+ * payload do pedido: é o caso razoável sem inventar escopo maior que o necessário.
  *
  * GRA-02: retomar é continuar o `thread_id`, nunca recomeçar. `stream(input, ...)`
  * aceita `InputType | CommandType | null` — passar `{}` (mesmo vazio) é um input de
@@ -79,7 +93,7 @@ export async function executeGraph(
   tx: Tx,
   graphFactory: AgentGraphFactory,
   options: ExecuteGraphOptions = {}
-): Promise<void> {
+): Promise<GraphRunOutcome> {
   const maxDurationMs = options.maxDurationMs ?? DEFAULT_MAX_DURATION_MS;
   const checkpointer = createCheckpointSaver(tenantId, tx);
   const compiled = graphFactory().compile({ checkpointer });
@@ -109,6 +123,8 @@ export async function executeGraph(
   });
   timeoutPromise.catch(() => {}); // evita unhandledRejection quando o grafo termina antes
 
+  let interrupted: { payload: unknown } | undefined;
+
   try {
     const stream = await compiled.stream(input, {
       ...config,
@@ -123,7 +139,11 @@ export async function executeGraph(
       if (result.done) break;
 
       for (const [node, output] of Object.entries(result.value as Record<string, unknown>)) {
-        if (node === "__interrupt__") continue;
+        if (node === INTERRUPT) {
+          const interrupts = output as Interrupt[];
+          interrupted = { payload: interrupts[0]?.value };
+          continue;
+        }
         seq += 1;
         await insertRunStep(
           {
@@ -139,6 +159,8 @@ export async function executeGraph(
         );
       }
     }
+
+    return interrupted ? { status: "interrupted", payload: interrupted.payload } : { status: "completed" };
   } catch (error) {
     // O timeout vira `ExecutionTimeoutError` — nunca o `AbortError` cru da lib, que não
     // diz por que a execução parou (regra do sanitizador: nome da classe, nada mais).
@@ -183,7 +205,7 @@ export async function runAgentGraph(
   run: ServiceRunRow,
   tx: Tx,
   options: ExecuteGraphOptions = {}
-): Promise<void> {
+): Promise<GraphRunOutcome> {
   const instance = await findServiceInstanceById(run.serviceInstanceId, tx);
   if (!instance) {
     throw new ServiceInstanceNotFoundError(run.serviceInstanceId);
@@ -199,5 +221,5 @@ export async function runAgentGraph(
     throw new AgentDefinitionNotFoundError(instance.agentKey, instance.agentVersion);
   }
 
-  await executeGraph(tenantId, run, tx, agent.graph, options);
+  return executeGraph(tenantId, run, tx, agent.graph, options);
 }

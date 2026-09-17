@@ -82,7 +82,9 @@ describe("execution/run-executor", () => {
 
     // Ciclo de vida do run é o que esta suíte testa, não o grafo — o default real
     // (T10, `graph-runner`) tem sua própria suíte de integração dedicada.
-    await executeRunJob(jobFor(tenantA, instanceId, runId), { runAgentGraphFn: async () => {} });
+    await executeRunJob(jobFor(tenantA, instanceId, runId), {
+      runAgentGraphFn: async () => ({ status: "completed" })
+    });
 
     const after = await withTenant(tenantA, (tx) => findServiceRunById(runId, tx));
     expect(after?.status).toBe("succeeded");
@@ -93,7 +95,9 @@ describe("execution/run-executor", () => {
     const instanceId = await seedActiveInstance(tenantA);
     const runId = await seedRun(tenantA, instanceId);
 
-    await executeRunJob(jobFor(tenantA, instanceId, runId), { runAgentGraphFn: async () => {} });
+    await executeRunJob(jobFor(tenantA, instanceId, runId), {
+      runAgentGraphFn: async () => ({ status: "completed" })
+    });
 
     const after = await withTenant(tenantA, (tx) => findServiceRunById(runId, tx));
     expect(after?.status).toBe("succeeded");
@@ -117,5 +121,37 @@ describe("execution/run-executor", () => {
     expect(after?.error).not.toContain(secret);
     expect(after?.error).not.toContain("senha-secreta");
     expect(after?.error).toBe("Error");
+  });
+
+  it("grafo pausa em interrupt: run vai pra awaiting_approval, nunca succeeded (APR-01)", async () => {
+    const instanceId = await seedActiveInstance(tenantA);
+    const runId = await seedRun(tenantA, instanceId);
+    const payload = { plan: "entregar 1 item de exercício" };
+
+    await executeRunJob(jobFor(tenantA, instanceId, runId), {
+      runAgentGraphFn: async () => ({ status: "interrupted", payload })
+    });
+
+    const after = await withTenant(tenantA, (tx) => findServiceRunById(runId, tx));
+    expect(after?.status).toBe("awaiting_approval");
+  });
+
+  it("run em awaiting_approval não é retomado por reentrega da fila — só por decisão", async () => {
+    const instanceId = await seedActiveInstance(tenantA);
+    const runId = await seedRun(tenantA, instanceId);
+    await withTenant(tenantA, (tx) => transitionServiceRunStatus(runId, "running", tx));
+    await withTenant(tenantA, (tx) => transitionServiceRunStatus(runId, "awaiting_approval", tx));
+    const before = await withTenant(tenantA, (tx) => findServiceRunById(runId, tx));
+
+    // Se o worker chegasse a chamar o grafo de novo, este mock provaria isso lançando.
+    await executeRunJob(jobFor(tenantA, instanceId, runId), {
+      runAgentGraphFn: async () => {
+        throw new Error("não deveria ser chamado: run já está aguardando aprovação");
+      }
+    });
+
+    const after = await withTenant(tenantA, (tx) => findServiceRunById(runId, tx));
+    expect(after?.status).toBe("awaiting_approval");
+    expect(after?.updatedAt).toEqual(before?.updatedAt);
   });
 });
