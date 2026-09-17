@@ -29,7 +29,9 @@ const DOMAIN_ERROR_STATUS: Record<string, number> = {
   CAPABILITY_MISMATCH: HttpStatus.BAD_REQUEST,
   CONNECTOR_NOT_FOUND: HttpStatus.NOT_FOUND,
   CONNECTION_NAME_DUPLICATE: HttpStatus.CONFLICT,
-  SERVICE_RUN_NOT_FOUND: HttpStatus.NOT_FOUND
+  SERVICE_RUN_NOT_FOUND: HttpStatus.NOT_FOUND,
+  APPROVAL_REQUEST_NOT_FOUND: HttpStatus.NOT_FOUND,
+  APPROVAL_ALREADY_DECIDED: HttpStatus.CONFLICT
 };
 
 // Texto de interface, deliberadamente diferente de DomainError.message (que é
@@ -49,7 +51,9 @@ const DOMAIN_ERROR_MESSAGE: Record<string, string> = {
   CAPABILITY_MISMATCH: "Esta conexão não atende à capability pedida.",
   CONNECTOR_NOT_FOUND: "Conector não encontrado no catálogo.",
   CONNECTION_NAME_DUPLICATE: "Já existe uma conexão com esse nome para este conector.",
-  SERVICE_RUN_NOT_FOUND: "Execução não encontrada."
+  SERVICE_RUN_NOT_FOUND: "Execução não encontrada.",
+  APPROVAL_REQUEST_NOT_FOUND: "Pedido de aprovação não encontrado.",
+  APPROVAL_ALREADY_DECIDED: "Esta aprovação já foi decidida."
 };
 
 const DEFAULT_MESSAGE_BY_STATUS: Record<number, string> = {

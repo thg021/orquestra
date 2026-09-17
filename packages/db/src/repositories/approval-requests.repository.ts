@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { approvalRequests } from "../schema/execution";
 import type { Tx } from "../tenant-context";
 
@@ -35,6 +35,16 @@ export async function createApprovalRequest(input: CreateApprovalRequestInput, t
 export async function findApprovalRequestById(id: string, tx: Tx): Promise<ApprovalRequestRow | undefined> {
   const rows = await tx.select().from(approvalRequests).where(eq(approvalRequests.id, id)).limit(1);
   return rows[0] as ApprovalRequestRow | undefined;
+}
+
+/** Fila de pendentes do tenant (APR-03/APR-04 no painel) — query direta sobre o índice `(tenant_id, status)` da T1. */
+export async function listPendingApprovalRequests(tenantId: string, tx: Tx): Promise<ApprovalRequestRow[]> {
+  const rows = await tx
+    .select()
+    .from(approvalRequests)
+    .where(and(eq(approvalRequests.tenantId, tenantId), eq(approvalRequests.status, "pending")))
+    .orderBy(desc(approvalRequests.createdAt));
+  return rows as ApprovalRequestRow[];
 }
 
 export class AlreadyDecidedError extends Error {

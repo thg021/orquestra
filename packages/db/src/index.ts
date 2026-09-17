@@ -66,6 +66,7 @@ export type { RunStepRow, InsertRunStepInput } from "./repositories/run-steps.re
 export {
   createApprovalRequest,
   findApprovalRequestById,
+  listPendingApprovalRequests,
   decideApprovalRequest,
   AlreadyDecidedError
 } from "./repositories/approval-requests.repository";

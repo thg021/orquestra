@@ -317,11 +317,13 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Aprovar registra quem e quando, e reenfileira o run
-- [ ] Recusar encerra o run sem executar o pendente, registrando quem e quando
-- [ ] Segunda decisão sobre o mesmo pedido recebe 409 e não tem efeito
-- [ ] `operator` recebe 403 ao decidir, e 200 ao listar
-- [ ] Aprovação de outro tenant responde 404, indistinguível de inexistente
+- [x] Aprovar registra quem e quando, e reenfileira o run
+- [x] Recusar encerra o run sem executar o pendente, registrando quem e quando
+- [x] Segunda decisão sobre o mesmo pedido recebe 409 e não tem efeito
+- [x] `operator` recebe 403 ao decidir, e 200 ao listar
+- [x] Aprovação de outro tenant responde 404, indistinguível de inexistente
+
+**Feito em 17/09/2026.** `ApprovalsController` (`GET /approvals` com `@Protected()`; `POST /approvals/:id/approve` e `/reject` com `@RequireRole("admin")`) delega para `approval.service.ts`, estendido em vez de duplicado — a mesma fronteira que já criava o pedido (T12) agora também decide. Duas decisões não óbvias: `AlreadyDecidedError` (de `@orquestra/db`, um `Error` puro) é traduzido para `ApprovalAlreadyDecidedError` (`DomainError`, 409) só depois que a guarda atômica do banco (`UPDATE ... WHERE status = 'pending'`) já rejeitou a segunda decisão — a tradução nunca decide sozinha, só relata; e a ordem dentro da `tx` é decidir primeiro, tocar no `ServiceRun` depois: se `decideApprovalRequest` lançar, `transitionServiceRunStatus`/`runQueue.enqueue` nunca rodam, então um duplo-clique não produz efeito duplo nem parcial. 404 de outro tenant não pede código novo: `findApprovalRequestById` não filtra por `tenantId` no `WHERE`, mas a `tx` já está sob `withTenant(tenantId, ...)` — RLS torna a linha de outro tenant invisível antes da consulta, e "não encontrado" e "é de outro tenant" chegam ao mesmo `ApprovalRequestNotFoundError`. Aprovar reenfileira usando o `trigger` original do run (não um tipo novo de disparo) — a fila só carrega o ponteiro de novo, e o job cai num run ainda `awaiting_approval`, então o worker de hoje (T7-T12, `SKIP_STATUSES`) o ignora sem erro; agir de verdade sobre a aprovação é da T14. No teste e2e, "reenfileirou" é provado anexando um segundo consumidor BullMQ (`createRunWorker` sobre a mesma conexão Redis do teste) e observando o job chegar com o `runId` esperado — sem depender do worker de produção.
 
 ---
 

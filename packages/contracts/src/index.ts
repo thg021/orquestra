@@ -44,6 +44,6 @@ export type {
   ConnectionSummary,
   RevokeConnectionResponse
 } from "./connections";
-export { serviceRunSummarySchema } from "./execution";
-export type { ServiceRunSummary } from "./execution";
+export { serviceRunSummarySchema, approvalRequestSummarySchema } from "./execution";
+export type { ServiceRunSummary, ApprovalRequestSummary } from "./execution";
 
