@@ -32,9 +32,15 @@ function toRunJobData(input: RunJob): RunJob {
  * comando falho por queda de rede rejeita a promise em vez de deixar o cliente
  * reconectar sozinho. O listener de erro é o que impede um ECONNREFUSED de virar
  * exceção não tratada e derrubar o processo `api`.
+ *
+ * `lazyConnect: true` adia o handshake TCP da conexão ioredis crua até o primeiro
+ * comando. Não é o suficiente por si só para o papel `api` (ver `RunQueueClient`
+ * abaixo, que é quem realmente evita conectar em todo boot) — mas continua sendo o
+ * comportamento certo para quem usa a conexão diretamente, como o worker (T5) e
+ * os próprios testes.
  */
 export function createRunQueueConnection(redisUrl: string): Redis {
-  const connection = new Redis(redisUrl, { maxRetriesPerRequest: null, lazyConnect: false });
+  const connection = new Redis(redisUrl, { maxRetriesPerRequest: null, lazyConnect: true });
   connection.on("error", (error) => {
     // Nunca `error.message` cru: driver de conexão pode ecoar host/porta e, em
     // alguns clientes, a própria URL de conexão.
@@ -49,4 +55,40 @@ export function createRunQueue(connection: Redis): Queue<RunJob> {
 
 export async function enqueueRun(queue: Queue<RunJob>, job: RunJob): Promise<void> {
   await queue.add(RUN_QUEUE_NAME, toRunJobData(job));
+}
+
+export interface RunQueueClient {
+  enqueue(job: RunJob): Promise<void>;
+  close(): Promise<void>;
+}
+
+/**
+ * O construtor do `Queue` do BullMQ chama `waitUntilReady()` internamente e força
+ * uma conexão de verdade, ignorando `lazyConnect` da conexão que ele recebe. Como
+ * o papel `api` cria esse client em todo boot (para poder enfileirar) mas a
+ * maioria das rotas nunca dispara um run, criar a `Queue` — e a conexão por trás
+ * dela — só no primeiro `enqueue()` é o que evita pagar uma tentativa de conexão a
+ * Redis em toda subida e em todo teste e2e que não tem nada a ver com execução.
+ */
+export function createRunQueueClient(redisUrl: string): RunQueueClient {
+  let state: { connection: Redis; queue: Queue<RunJob> } | undefined;
+
+  function ensureState(): { connection: Redis; queue: Queue<RunJob> } {
+    if (!state) {
+      const connection = createRunQueueConnection(redisUrl);
+      state = { connection, queue: createRunQueue(connection) };
+    }
+    return state;
+  }
+
+  return {
+    async enqueue(job) {
+      await enqueueRun(ensureState().queue, job);
+    },
+    async close() {
+      if (!state) return;
+      await state.queue.close();
+      state.connection.disconnect();
+    }
+  };
 }

@@ -189,9 +189,9 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Instância `active` cria run `queued` e enfileira
-- [ ] Instância em qualquer outro estado recebe 409 nomeando o status atual, sem criar run
-- [ ] `operator` recebe 403; `owner`/`admin` passam
+- [x] Instância `active` cria run `queued` e enfileira
+- [x] Instância em qualquer outro estado recebe 409 nomeando o status atual, sem criar run
+- [x] `operator` recebe 403; `owner`/`admin` passam
 
 ---
 

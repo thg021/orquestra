@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import type { Queue } from "bullmq";
 import {
   createRunQueueConnection,
+  createRunQueueClient,
   enqueueRun,
   RUN_QUEUE_NAME,
   type RunJob
@@ -45,5 +46,16 @@ describe("execution/queue", () => {
     connections.push(connection);
 
     expect(connection.listenerCount("error")).toBeGreaterThan(0);
+  });
+
+  it("createRunQueueClient não conecta nada até o primeiro enqueue", async () => {
+    // Endereço inválido de propósito: se o client tentasse conectar aqui, close()
+    // demoraria (tentativa de handshake) ou emitiria erro. Nenhum enqueue foi chamado.
+    const client = createRunQueueClient("redis://127.0.0.1:1");
+
+    const start = Date.now();
+    await client.close();
+
+    expect(Date.now() - start).toBeLessThan(50);
   });
 });
