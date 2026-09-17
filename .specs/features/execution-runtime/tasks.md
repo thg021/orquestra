@@ -279,9 +279,11 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Agente de três passos derrubado depois do segundo: ao retomar, só o terceiro executa
-- [ ] O passo já registrado não ganha um segundo `RunStep` na retomada
-- [ ] Execução que passa do tempo máximo encerra como falha, sem ficar rodando
+- [x] Agente de três passos derrubado depois do segundo: ao retomar, só o terceiro executa
+- [x] O passo já registrado não ganha um segundo `RunStep` na retomada
+- [x] Execução que passa do tempo máximo encerra como falha, sem ficar rodando
+
+**Feito em 17/09/2026.** Duas decisões não óbvias. Primeira: `stream(input, ...)` do LangGraph aceita `InputType | CommandType | null` — passar `{}` (mesmo vazio) de novo numa reentrega é um input de verdade aplicado a partir do `START`, e reexecuta os nós já concluídos; só `null` retoma o `thread_id` de onde o checkpoint parou. `executeGraph` agora chama `checkpointer.getTuple(config)` antes de montar a chamada: sem checkpoint existente, roda com `{}` (primeira vez); com checkpoint, roda com `null` (retomada). Segunda: o corte de tempo máximo (`maxDurationMs`, default 5 minutos, injetável em teste) passa um `AbortSignal` de verdade no config do `stream` — mas atribuir a falha ao nó certo não pode depender de esperar a reação (assíncrona, sem tempo determinístico) do LangGraph ao abort: um teste inicial mostrou `compiled.getState(config).next` vindo vazio de vez em quando quando o `catch` corria antes do LangGraph terminar de registrar a tarefa abortada. A correção foi consumir o `stream` numa corrida própria (`Promise.race` contra uma promise de timeout), nunca esperando a resolução do nó em si — assim `getState` só é chamado quando o nó que estourou o tempo nunca chegou a ser resolvido do nosso lado, e `state.next` aponta pra ele de forma confiável, igual ao caminho já usado para erro síncrono. O erro sanitizado gravado no `RunStep` é sempre `ExecutionTimeoutError`, nunca o `AbortError` cru da lib. `runAgentGraph`/`executeGraph` ganharam um parâmetro `options` opcional no final — assinatura de quem já chamava sem ele (`run-executor.ts`, testes de T10) não muda.
 
 ---
 

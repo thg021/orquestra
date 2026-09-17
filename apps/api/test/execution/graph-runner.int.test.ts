@@ -15,7 +15,12 @@ import {
   createCheckpointSaver,
   type ServiceRunRow
 } from "@orquestra/db";
-import { executeGraph, runAgentGraph, ActivationGateFailedError } from "../../src/execution/graph-runner";
+import {
+  executeGraph,
+  runAgentGraph,
+  ActivationGateFailedError,
+  ExecutionTimeoutError
+} from "../../src/execution/graph-runner";
 import { startTestDatabase, type TestDatabase } from "../support/test-database";
 
 /**
@@ -174,5 +179,96 @@ describe("execution/graph-runner", () => {
     const steps = await withTenant(tenantA, (tx) => listRunSteps(run.id, tx));
     expect(steps).toHaveLength(1);
     expect(steps[0]).toMatchObject({ status: "succeeded", detail: { node: "prepare" } });
+  });
+
+  it("retomada: nó já concluído não roda de novo, e não ganha um segundo RunStep", async () => {
+    const instanceId = await seedInstance(tenantA, "exercise", "1.0.0");
+    const run = await seedRun(tenantA, instanceId);
+
+    // stepThree só falha na primeira vez que roda — simula o worker sendo derrubado
+    // depois que stepOne e stepTwo já foram checkpointados. Os contadores provam que a
+    // retomada não reexecuta nó nenhum que já tinha completado.
+    const calls = { stepOne: 0, stepTwo: 0, stepThree: 0 };
+    function buildCrashOnceGraph() {
+      return new StateGraph(linearStateSchema)
+        .addNode("stepOne", async (state) => {
+          calls.stepOne += 1;
+          return { trail: [...state.trail, "stepOne"] };
+        })
+        .addNode("stepTwo", async (state) => {
+          calls.stepTwo += 1;
+          return { trail: [...state.trail, "stepTwo"] };
+        })
+        .addNode("stepThree", async (state) => {
+          calls.stepThree += 1;
+          if (calls.stepThree === 1) {
+            throw new Error("queda simulada do worker depois do stepTwo");
+          }
+          return { trail: [...state.trail, "stepThree"] };
+        })
+        .addEdge(START, "stepOne")
+        .addEdge("stepOne", "stepTwo")
+        .addEdge("stepTwo", "stepThree")
+        .addEdge("stepThree", END);
+    }
+
+    await withTenant(tenantA, async (tx) => {
+      await expect(executeGraph(tenantA, run, tx, buildCrashOnceGraph)).rejects.toThrow(
+        "queda simulada do worker depois do stepTwo"
+      );
+    });
+    expect(calls).toEqual({ stepOne: 1, stepTwo: 1, stepThree: 1 });
+
+    // Reentrega do mesmo run/thread — se `executeGraph` passasse `{}` de novo em vez de
+    // `null`, o LangGraph trataria como novo input a partir do START e reexecutaria
+    // stepOne e stepTwo.
+    await withTenant(tenantA, (tx) => executeGraph(tenantA, run, tx, buildCrashOnceGraph));
+    expect(calls).toEqual({ stepOne: 1, stepTwo: 1, stepThree: 2 });
+
+    const steps = await withTenant(tenantA, (tx) => listRunSteps(run.id, tx));
+    expect(
+      steps.map((step) => [(step.detail as { node: string }).node, step.status])
+    ).toEqual([
+      ["stepOne", "succeeded"],
+      ["stepTwo", "succeeded"],
+      ["stepThree", "failed"],
+      ["stepThree", "succeeded"]
+    ]);
+  });
+
+  it("execução que passa do tempo máximo encerra como falha, sem ficar rodando", async () => {
+    const instanceId = await seedInstance(tenantA, "exercise", "1.0.0");
+    const run = await seedRun(tenantA, instanceId);
+
+    function buildSlowGraph() {
+      return new StateGraph(linearStateSchema)
+        .addNode("stepOne", async (state) => ({ trail: [...state.trail, "stepOne"] }))
+        .addNode("stepTwo", async (state, config) => {
+          await new Promise<void>((resolve, reject) => {
+            const timer = setTimeout(resolve, 2_000);
+            config?.signal?.addEventListener("abort", () => {
+              clearTimeout(timer);
+              reject(new Error("nó abortado pelo teste"));
+            });
+          });
+          return { trail: [...state.trail, "stepTwo"] };
+        })
+        .addEdge(START, "stepOne")
+        .addEdge("stepOne", "stepTwo")
+        .addEdge("stepTwo", END);
+    }
+
+    await withTenant(tenantA, async (tx) => {
+      await expect(
+        executeGraph(tenantA, run, tx, buildSlowGraph, { maxDurationMs: 50 })
+      ).rejects.toThrow(ExecutionTimeoutError);
+    });
+
+    const steps = await withTenant(tenantA, (tx) => listRunSteps(run.id, tx));
+    expect(steps).toHaveLength(2);
+    expect(steps[0]).toMatchObject({ status: "succeeded", detail: { node: "stepOne" } });
+    expect(steps[1]).toMatchObject({ status: "failed", detail: { node: "stepTwo" } });
+    // Sanitizado: nunca o AbortError cru da lib, e nunca a mensagem interna do nó.
+    expect(steps[1]?.error).toBe("ExecutionTimeoutError");
   });
 });
