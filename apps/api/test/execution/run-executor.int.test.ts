@@ -80,7 +80,9 @@ describe("execution/run-executor", () => {
     await withTenant(tenantA, (tx) => transitionServiceRunStatus(runId, "running", tx));
     const midCrash = await withTenant(tenantA, (tx) => findServiceRunById(runId, tx));
 
-    await executeRunJob(jobFor(tenantA, instanceId, runId));
+    // Ciclo de vida do run é o que esta suíte testa, não o grafo — o default real
+    // (T10, `graph-runner`) tem sua própria suíte de integração dedicada.
+    await executeRunJob(jobFor(tenantA, instanceId, runId), { runAgentGraphFn: async () => {} });
 
     const after = await withTenant(tenantA, (tx) => findServiceRunById(runId, tx));
     expect(after?.status).toBe("succeeded");
@@ -91,7 +93,7 @@ describe("execution/run-executor", () => {
     const instanceId = await seedActiveInstance(tenantA);
     const runId = await seedRun(tenantA, instanceId);
 
-    await executeRunJob(jobFor(tenantA, instanceId, runId));
+    await executeRunJob(jobFor(tenantA, instanceId, runId), { runAgentGraphFn: async () => {} });
 
     const after = await withTenant(tenantA, (tx) => findServiceRunById(runId, tx));
     expect(after?.status).toBe("succeeded");

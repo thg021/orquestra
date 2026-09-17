@@ -3,7 +3,7 @@
 **Design:** `.specs/features/execution-runtime/design.md`
 **Spec:** `.specs/features/execution-runtime/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 3 de 29 tasks (T1 a T3 concluídas em 07/09/2026)
+**Status:** Em andamento — 10 de 29 tasks (T1 a T10 concluídas)
 
 29 tasks. Uma entrega por task, com teste co-locado.
 
@@ -260,9 +260,11 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] Cada nó executado grava um `RunStep`
-- [ ] Antes de executar, o gate do M1 é reavaliado; se falhar, o run falha sem tocar em nada
-- [ ] Falha no meio preserva o checkpoint do que já rodou, com o erro no passo correspondente
+- [x] Cada nó executado grava um `RunStep`
+- [x] Antes de executar, o gate do M1 é reavaliado; se falhar, o run falha sem tocar em nada
+- [x] Falha no meio preserva o checkpoint do que já rodou, com o erro no passo correspondente
+
+**Feito em 17/09/2026.** `run-executor.ts` chama `runAgentGraph` (o `graph-runner.ts` novo) no lugar do no-op, dentro da mesma `tx`. Duas decisões não óbvias: `evaluateInstanceActivation` (M1) passou a receber a `Tx` já aberta em vez de abrir a própria via `withTenant` — `activateServiceInstance` agora abre uma `withTenant` por fora e repassa; comportamento observável não mudou (suíte e2e de `lifecycle.controller` continua verde sem alteração). E o grafo roda em modo `stream` (`streamMode: "updates"`), não `invoke`, pra gravar um `RunStep` por nó — um chunk `__interrupt__` (o agente `exercise` pausa em `requestApproval`) não vira `RunStep` nem falha, só não quebra (T12 decide o resto); e o nó que falhou é achado com `compiled.getState(config).next[0]`, porque um nó que lança nunca chega a virar checkpoint. `seq` continua de `listRunSteps(...).length` em vez de zerar — T11 ainda não sabe retomar de verdade, mas isso evita colidir com a unicidade de `(run_id, seq)` numa reentrega. `@langchain/langgraph` virou dependência direta de `apps/api` (já era transitiva).
 
 ---
 

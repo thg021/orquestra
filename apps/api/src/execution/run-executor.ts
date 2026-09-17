@@ -1,4 +1,5 @@
 import { withTenant, findServiceRunById, transitionServiceRunStatus } from "@orquestra/db";
+import { runAgentGraph } from "./graph-runner";
 import type { RunJob } from "./queue";
 
 const FINAL_STATUSES = new Set(["succeeded", "failed"]);
@@ -9,12 +10,8 @@ function sanitizeError(error: unknown): string {
 }
 
 export interface ExecuteRunJobOptions {
-  /** Injetável em teste (T10 substitui por uma chamada real ao `graph-runner`). */
-  runAgentGraphFn?: () => Promise<void>;
-}
-
-async function defaultRunAgentGraph(): Promise<void> {
-  // T10 troca este corpo pela execução de verdade do grafo do agente.
+  /** Injetável em teste — o default (T10) é a execução de verdade do grafo do agente. */
+  runAgentGraphFn?: typeof runAgentGraph;
 }
 
 /**
@@ -23,7 +20,7 @@ async function defaultRunAgentGraph(): Promise<void> {
  * um run de outro tenant nem aparece aqui, não uma checagem de aplicação.
  */
 export async function executeRunJob(job: RunJob, options: ExecuteRunJobOptions = {}): Promise<void> {
-  const runAgentGraphFn = options.runAgentGraphFn ?? defaultRunAgentGraph;
+  const runAgentGraphFn = options.runAgentGraphFn ?? runAgentGraph;
 
   await withTenant(job.tenantId, async (tx) => {
     const run = await findServiceRunById(job.runId, tx);
@@ -40,7 +37,7 @@ export async function executeRunJob(job: RunJob, options: ExecuteRunJobOptions =
     }
 
     try {
-      await runAgentGraphFn();
+      await runAgentGraphFn(job.tenantId, run, tx);
       await transitionServiceRunStatus(job.runId, "succeeded", tx);
     } catch (error) {
       await transitionServiceRunStatus(job.runId, "failed", tx, { error: sanitizeError(error) });
