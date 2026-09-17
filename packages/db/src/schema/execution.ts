@@ -205,3 +205,33 @@ export const graphCheckpoints = pgTable(
     tenantIsolation(table.tenantId)
   ]
 ).enableRLS();
+
+/**
+ * Writes pendentes de um checkpoint ainda não fechado — o que o `BaseCheckpointSaver`
+ * do LangGraph precisa pra retomar no meio de um superstep sem perder o que os nós já
+ * escreveram (T8). `graph_checkpoints` guarda o checkpoint fechado; esta tabela guarda
+ * o que ainda não virou um. `idx` negativo (`WRITES_IDX_MAP` da lib) marca canais
+ * especiais (erro, agendamento) que se sobrescrevem; `idx` positivo é a posição do
+ * write na chamada — nunca se sobrescreve, é o que torna a escrita idempotente.
+ */
+export const graphCheckpointWrites = pgTable(
+  "graph_checkpoint_writes",
+  {
+    id: uuid("id").primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    runId: uuid("run_id")
+      .notNull()
+      .references(() => serviceRuns.id),
+    checkpointId: text("checkpoint_id").notNull(),
+    taskId: text("task_id").notNull(),
+    idx: integer("idx").notNull(),
+    channel: text("channel").notNull(),
+    value: jsonb("value").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+  },
+  (table) => [
+    unique("graph_checkpoint_writes_unique").on(table.runId, table.checkpointId, table.taskId, table.idx),
+    index("graph_checkpoint_writes_lookup_idx").on(table.runId, table.checkpointId),
+    tenantIsolation(table.tenantId)
+  ]
+).enableRLS();

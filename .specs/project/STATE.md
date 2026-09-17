@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-16
-**Fase atual:** M2 — Runtime de execução, em andamento. T1 a T7 concluídas (tabelas do runtime, repositórios de execução/aprovação/recibo/agendamento, fila e contrato do job, papel de processo `worker`, disparo manual de execução, ciclo de vida do run no worker). Próximo: T8 — checkpointer próprio.
+**Fase atual:** M2 — Runtime de execução, em andamento. T1 a T8 concluídas (tabelas do runtime, repositórios de execução/aprovação/recibo/agendamento, fila e contrato do job, papel de processo `worker`, disparo manual de execução, ciclo de vida do run no worker, checkpointer próprio). Próximo: T9 — agente executável no catálogo.
 
 ## Decisões
 
@@ -50,6 +50,9 @@
 | D47 | 2026-09-16 | `createRunWorker`/`closeRunWorker` (`apps/api/src/execution/worker.ts`) recebem `processJob` como parâmetro — o motor de execução de verdade (T7) ainda não existe; T5 só liga o consumidor à fila, sem tocar `service_runs`. `main.ts` usa um processador provisório que só loga o recebimento do job | T5 |
 | D48 | 2026-09-16 | `POST /service-instances/:id/runs` recusa instância fora de `active` com `ConflictException({code, message})` direto no service (não um `DomainError` de `packages/core`) — mesmo padrão do `ACTIVATION_BLOCKED` do M1, porque a mensagem precisa nomear o status atual (dinâmico), e o `ErrorFilter` só repassa `message` dinâmica para `HttpException`, nunca para `DomainError` (que usa texto estático por código) | T6 |
 | D49 | 2026-09-16 | `run-executor.ts` (T7) termina todo run bem formado em `succeeded` sem executar grafo nenhum — `runAgentGraphFn` é injetável (mesmo padrão do `bootstrap.ts`) e T10 substitui o default por uma chamada real ao `graph-runner`. A idempotência (RUN-04) e a retomada após crash (RUN-06) são garantidas só pelo status do `ServiceRun` no banco, não por estado em memória do worker | T7 |
+| D50 | 2026-09-16 | `@langchain/langgraph-checkpoint` + `@langchain/core` (peer dela) como dependências novas em `packages/db` — T9/T10 (grafo de verdade) vão precisar delas de qualquer jeito. Uma tabela nova, `graph_checkpoint_writes` (com `tenant_id`/RLS, no mesmo padrão das outras), guarda os "pending writes" que `graph_checkpoints` (T1) não tinha onde guardar — o checkpoint fechado é uma coisa, os writes parciais de um superstep ainda em andamento são outra | T8 |
+| D51 | 2026-09-16 | `checkpoint_ns` (namespace de subgrafo do LangGraph) não é suportado — nenhum agente do catálogo usa subgrafo. Um valor não vazio lança `UnsupportedCheckpointNamespaceError` em vez de ser ignorado ou colapsado em silêncio, para que o dia que alguém precisar de subgrafo isso apareça como erro claro, não como corrupção de estado | T8 |
+| D52 | 2026-09-16 | `state`/`metadata`/`value` do checkpointer guardam um envelope `{type, data}` em `jsonb` (não a estrutura crua) — `data` é o resultado de `this.serde.dumpsTyped()` (o `JsonPlusSerializer` do LangGraph, que lida com `Map`/`Date`/`undefined` via msgpack) em base64. A referência oficial do LangGraph guarda isso em coluna `bytea`; a T1 já tinha fixado `jsonb` para essas colunas, e o envelope preserva o round-trip do serializer sem precisar mudar o tipo da coluna | T8 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |

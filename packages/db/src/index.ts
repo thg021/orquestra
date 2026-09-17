@@ -86,3 +86,5 @@ export {
 } from "./repositories/schedules.repository";
 export type { ScheduleRow, UpsertScheduleInput } from "./repositories/schedules.repository";
 
+export { createCheckpointSaver, UnsupportedCheckpointNamespaceError } from "./checkpointer";
+

@@ -224,10 +224,10 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] `getTuple`, `list`, `put` e `putWrites` implementados contra a tabela nossa
-- [ ] Nenhuma tabela criada pela biblioteca aparece no banco depois da migração
-- [ ] Checkpoint de um tenant não é legível sob o contexto de outro
-- [ ] Ida e volta: gravar estado, ler de volta e obter exatamente o mesmo estado
+- [x] `getTuple`, `list`, `put` e `putWrites` implementados contra a tabela nossa
+- [x] Nenhuma tabela criada pela biblioteca aparece no banco depois da migração
+- [x] Checkpoint de um tenant não é legível sob o contexto de outro
+- [x] Ida e volta: gravar estado, ler de volta e obter exatamente o mesmo estado
 
 ---
 

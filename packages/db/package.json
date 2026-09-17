@@ -9,6 +9,8 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
+    "@langchain/core": "^1.2.11",
+    "@langchain/langgraph-checkpoint": "^1.1.5",
     "@orquestra/core": "workspace:*",
     "drizzle-orm": "^0.36.4",
     "pg": "^8.13.1"
