@@ -2,15 +2,17 @@ import "reflect-metadata";
 import { bootstrap } from "./bootstrap";
 import { createRunQueueConnection } from "./execution/queue";
 import { createRunWorker, closeRunWorker } from "./execution/worker";
+import { executeRunJob } from "./execution/run-executor";
 
 /**
- * A lógica real de execução do grafo chega na T7. Até lá, o worker só prova que
- * consome a fila — o job fica marcado como processado sem tocar `service_runs`.
+ * A execução de verdade do grafo do agente chega na T10 (via `runAgentGraphFn`
+ * injetável de `executeRunJob`) — até lá, todo run bem formado termina `succeeded`
+ * sem fazer nada além do ciclo de vida (contexto de tenant, status, erro sanitizado).
  */
 async function startWorker(redisUrl: string): Promise<void> {
   const connection = createRunQueueConnection(redisUrl);
   const worker = createRunWorker(connection, async (job) => {
-    console.log(`orquestra: worker recebeu run "${job.data.runId}" (${job.data.trigger})`);
+    await executeRunJob(job.data);
   });
 
   const shutdown = async (signal: NodeJS.Signals): Promise<void> => {

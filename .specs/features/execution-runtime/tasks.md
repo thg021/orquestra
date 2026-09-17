@@ -206,10 +206,10 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] O contexto de tenant é estabelecido antes de qualquer leitura de dado de negócio
-- [ ] Job reentregue para um run já concluído não executa nada
-- [ ] Worker derrubado no meio deixa o run recuperável; a subida seguinte o retoma
-- [ ] Falha inesperada grava o erro sanitizado no run, sem segredo nem string de conexão
+- [x] O contexto de tenant é estabelecido antes de qualquer leitura de dado de negócio
+- [x] Job reentregue para um run já concluído não executa nada
+- [x] Worker derrubado no meio deixa o run recuperável; a subida seguinte o retoma
+- [x] Falha inesperada grava o erro sanitizado no run, sem segredo nem string de conexão
 
 ---
 

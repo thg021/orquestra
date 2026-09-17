@@ -1,7 +1,7 @@
 # State
 
 **Última atualização:** 2026-09-16
-**Fase atual:** M2 — Runtime de execução, em andamento. T1 a T6 concluídas (tabelas do runtime, repositórios de execução/aprovação/recibo/agendamento, fila e contrato do job, papel de processo `worker`, disparo manual de execução). Próximo: T7 — ciclo de vida do run no worker.
+**Fase atual:** M2 — Runtime de execução, em andamento. T1 a T7 concluídas (tabelas do runtime, repositórios de execução/aprovação/recibo/agendamento, fila e contrato do job, papel de processo `worker`, disparo manual de execução, ciclo de vida do run no worker). Próximo: T8 — checkpointer próprio.
 
 ## Decisões
 
@@ -49,6 +49,7 @@
 | D46 | 2026-09-16 | `@testcontainers/redis` como dependência nova (dev) em `apps/api` — mesmo padrão do Postgres: teste de worker/fila roda contra Redis real descartável, nunca mock, para não confiar em comportamento de fila que um mock simplifica demais | T5 |
 | D47 | 2026-09-16 | `createRunWorker`/`closeRunWorker` (`apps/api/src/execution/worker.ts`) recebem `processJob` como parâmetro — o motor de execução de verdade (T7) ainda não existe; T5 só liga o consumidor à fila, sem tocar `service_runs`. `main.ts` usa um processador provisório que só loga o recebimento do job | T5 |
 | D48 | 2026-09-16 | `POST /service-instances/:id/runs` recusa instância fora de `active` com `ConflictException({code, message})` direto no service (não um `DomainError` de `packages/core`) — mesmo padrão do `ACTIVATION_BLOCKED` do M1, porque a mensagem precisa nomear o status atual (dinâmico), e o `ErrorFilter` só repassa `message` dinâmica para `HttpException`, nunca para `DomainError` (que usa texto estático por código) | T6 |
+| D49 | 2026-09-16 | `run-executor.ts` (T7) termina todo run bem formado em `succeeded` sem executar grafo nenhum — `runAgentGraphFn` é injetável (mesmo padrão do `bootstrap.ts`) e T10 substitui o default por uma chamada real ao `graph-runner`. A idempotência (RUN-04) e a retomada após crash (RUN-06) são garantidas só pelo status do `ServiceRun` no banco, não por estado em memória do worker | T7 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |
