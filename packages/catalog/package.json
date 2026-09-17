@@ -9,6 +9,7 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
+    "@langchain/langgraph": "^1.4.15",
     "@orquestra/core": "workspace:*",
     "zod": "^4.5.4"
   }

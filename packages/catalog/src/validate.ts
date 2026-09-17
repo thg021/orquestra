@@ -10,7 +10,8 @@ export type CatalogIssue =
   | { readonly code: "INVALID_KEY"; readonly key: string }
   | { readonly code: "INVALID_VERSION"; readonly key: string; readonly version: string }
   | { readonly code: "CAPABILITY_ORPHANED"; readonly agentKey: string; readonly capability: string }
-  | { readonly code: "UNSUPPORTED_FORM_SCHEMA"; readonly key: string; readonly paths: readonly string[] };
+  | { readonly code: "UNSUPPORTED_FORM_SCHEMA"; readonly key: string; readonly paths: readonly string[] }
+  | { readonly code: "AGENT_MISSING_GRAPH"; readonly key: string };
 
 export interface CatalogInput {
   readonly agents: readonly AgentDefinition[];
@@ -39,6 +40,10 @@ export function validateCatalog(input: CatalogInput): CatalogIssue[] {
     const formCheck = checkFormSchemaSupport(agent.configSchema);
     if (!formCheck.supported) {
       issues.push({ code: "UNSUPPORTED_FORM_SCHEMA", key: agent.key, paths: formCheck.unsupportedPaths });
+    }
+
+    if (typeof agent.graph !== "function") {
+      issues.push({ code: "AGENT_MISSING_GRAPH", key: agent.key });
     }
   }
 

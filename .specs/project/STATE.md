@@ -1,7 +1,7 @@
 # State
 
-**Última atualização:** 2026-09-16
-**Fase atual:** M2 — Runtime de execução, em andamento. T1 a T8 concluídas (tabelas do runtime, repositórios de execução/aprovação/recibo/agendamento, fila e contrato do job, papel de processo `worker`, disparo manual de execução, ciclo de vida do run no worker, checkpointer próprio). Próximo: T9 — agente executável no catálogo.
+**Última atualização:** 2026-09-17
+**Fase atual:** M2 — Runtime de execução, em andamento. T1 a T9 concluídas (tabelas do runtime, repositórios de execução/aprovação/recibo/agendamento, fila e contrato do job, papel de processo `worker`, disparo manual de execução, ciclo de vida do run no worker, checkpointer próprio, agente executável no catálogo). Próximo: T10 — execução do grafo com checkpoint.
 
 ## Decisões
 
@@ -53,6 +53,8 @@
 | D50 | 2026-09-16 | `@langchain/langgraph-checkpoint` + `@langchain/core` (peer dela) como dependências novas em `packages/db` — T9/T10 (grafo de verdade) vão precisar delas de qualquer jeito. Uma tabela nova, `graph_checkpoint_writes` (com `tenant_id`/RLS, no mesmo padrão das outras), guarda os "pending writes" que `graph_checkpoints` (T1) não tinha onde guardar — o checkpoint fechado é uma coisa, os writes parciais de um superstep ainda em andamento são outra | T8 |
 | D51 | 2026-09-16 | `checkpoint_ns` (namespace de subgrafo do LangGraph) não é suportado — nenhum agente do catálogo usa subgrafo. Um valor não vazio lança `UnsupportedCheckpointNamespaceError` em vez de ser ignorado ou colapsado em silêncio, para que o dia que alguém precisar de subgrafo isso apareça como erro claro, não como corrupção de estado | T8 |
 | D52 | 2026-09-16 | `state`/`metadata`/`value` do checkpointer guardam um envelope `{type, data}` em `jsonb` (não a estrutura crua) — `data` é o resultado de `this.serde.dumpsTyped()` (o `JsonPlusSerializer` do LangGraph, que lida com `Map`/`Date`/`undefined` via msgpack) em base64. A referência oficial do LangGraph guarda isso em coluna `bytea`; a T1 já tinha fixado `jsonb` para essas colunas, e o envelope preserva o round-trip do serializer sem precisar mudar o tipo da coluna | T8 |
+| D53 | 2026-09-17 | `@langchain/langgraph` como dependência nova em `packages/catalog` (continuação natural do D50) — `AgentDefinitionInput.graph` é uma fábrica preguiçosa que devolve o `StateGraph` **não compilado**; quem compila com o checkpointer da transação do tenant é o worker (T10), nunca o catálogo. Tipado `StateGraph<any×10>` de propósito — passar `any` só no primeiro parâmetro genérico não erasa `N` (nome de nó), que fica preso ao literal de cada agente | T9 |
+| D54 | 2026-09-17 | `exercise` (agente de exercício, 3 nós: prepara → pede aprovação (`interrupt`) → entrega) entra no catálogo real (`AGENTS`), visível em `GET /catalog/agents` — não é um fixture só de teste. É o que os specs de M2 pedem ("disparar pelo painel um agente de exercício"): o motor de execução precisa de algo real para rodar enquanto a rotina contábil de verdade não existe (M4, D41). `accounting-routine` ganhou um grafo-placeholder de um nó só, só para o catálogo continuar válido — nenhuma regra contábil decidida aqui | T9 |
 | D24 | 2026-09-06 | DEK aleatória por conexão, guardada cifrada sob chave de tenant derivada por HKDF da KEK — rotação de KEK recifra só as DEKs, nunca os segredos | M1 design §Cofre |
 | D25 | 2026-09-06 | Envelope binário único (`versão‖IV‖tag‖ciphertext`) em `bytea`, com AAD `tenant ‖ conexão ‖ versão` — mover linha cifrada entre tenants não decifra | M1 design §Cofre |
 | D26 | 2026-09-06 | Fluxo OAuth adiado para o M3, junto do primeiro adapter que consome o token; o M1 entrega credencial por formulário e o modelo já preparado | M1 spec §Out of Scope |

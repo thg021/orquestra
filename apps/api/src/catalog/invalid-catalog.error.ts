@@ -14,6 +14,8 @@ function describe(issue: CatalogIssue): string {
       return `agente "${issue.agentKey}" exige a capability "${issue.capability}", mas nenhum conector a satisfaz`;
     case "UNSUPPORTED_FORM_SCHEMA":
       return `"${issue.key}" tem schema fora do subconjunto suportado pelo formulário: ${issue.paths.join(", ")}`;
+    case "AGENT_MISSING_GRAPH":
+      return `agente "${issue.key}" não declara grafo`;
   }
 }
 

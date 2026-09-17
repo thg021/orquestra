@@ -4,6 +4,7 @@ export { defineAgent, defineConnector, CONNECTOR_KINDS, AUTH_KINDS } from "./def
 export type {
   AgentDefinition,
   AgentDefinitionInput,
+  AgentGraphFactory,
   ConnectorDefinition,
   ConnectorDefinitionInput,
   CapabilityRequirement,
@@ -19,6 +20,7 @@ export { validateCatalog } from "./validate";
 export type { CatalogIssue, CatalogInput } from "./validate";
 
 export { accountingRoutine } from "./agents/accounting-routine";
+export { exerciseAgent } from "./agents/exercise";
 export { platformUpload } from "./connectors/platform-upload";
 export { onedrive } from "./connectors/onedrive";
 export { googleDrive } from "./connectors/google-drive";

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { StateGraph, START, END } from "@langchain/langgraph";
 import { defineAgent } from "../define";
 import { CAPABILITIES } from "../capabilities";
 
@@ -36,9 +37,14 @@ const customerSchema = z.object({
  * não são configuráveis aqui — são regra de negócio fixa, extraída para código
  * testável no M4, não campo de formulário.
  *
- * O grafo LangGraph que executa a rotina é escopo do M2 — esta definição só declara
- * o contrato: o que o escritório configura, do que ela precisa, e que dado mantém.
+ * O grafo de verdade (ler documento, conferir contra o cadastro, montar plano de
+ * entrega) é regra de negócio do M4 (D41) — as regras hoje implícitas na skill
+ * original ainda não viraram teste. Este é um placeholder de um nó só, só para o
+ * catálogo ficar válido (GRA-01); T9 não decide nenhuma regra contábil.
  */
+function buildPlaceholderGraph() {
+  return new StateGraph(z.object({})).addNode("placeholder", async () => ({})).addEdge(START, "placeholder").addEdge("placeholder", END);
+}
 export const accountingRoutine = defineAgent({
   key: "accounting-routine",
   version: "1.0.0",
@@ -70,5 +76,6 @@ export const accountingRoutine = defineAgent({
       key: "customers",
       schema: customerSchema
     }
-  ]
+  ],
+  graph: buildPlaceholderGraph
 });

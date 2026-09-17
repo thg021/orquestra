@@ -38,13 +38,13 @@ describe("CatalogController", () => {
     const response = await request(app!.getHttpServer()).get("/catalog/agents");
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveLength(1);
-    expect(response.body[0].key).toBe("accounting-routine");
-    expect(response.body[0].capabilities).toContainEqual({
+    expect(response.body).toHaveLength(2);
+    const accountingRoutine = response.body.find((a: { key: string }) => a.key === "accounting-routine");
+    expect(accountingRoutine.capabilities).toContainEqual({
       capability: "file-storage",
       required: true
     });
-    expect(response.body[0].configSchema.properties.signature).toBeDefined();
+    expect(accountingRoutine.configSchema.properties.signature).toBeDefined();
   });
 
   it("GET /catalog/connectors devolve os seis conectores, com o campo secreto marcado e sem valor algum", async () => {

@@ -1,4 +1,5 @@
 import { accountingRoutine } from "./agents/accounting-routine";
+import { exerciseAgent } from "./agents/exercise";
 import { platformUpload } from "./connectors/platform-upload";
 import { onedrive } from "./connectors/onedrive";
 import { googleDrive } from "./connectors/google-drive";
@@ -12,7 +13,7 @@ import { validateCatalog, type CatalogIssue } from "./validate";
  * Lista explícita, não registro implícito por efeito colateral de import: acrescentar
  * um agente ou conector novo é uma linha aqui, visível no diff.
  */
-export const AGENTS = [accountingRoutine] as const;
+export const AGENTS = [accountingRoutine, exerciseAgent] as const;
 
 export const CONNECTORS = [
   platformUpload,

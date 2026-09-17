@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { StateGraph } from "@langchain/langgraph";
 import { CAPABILITIES, isCapability, type Capability } from "./capabilities";
 import { InvalidDefinitionError } from "./errors";
 import { isSecret } from "./secret";
@@ -21,6 +22,18 @@ export interface DataCollection {
   readonly schema: z.ZodType;
 }
 
+/**
+ * Fábrica preguiçosa: listar o catálogo (`AGENTS`) nunca chama isto — só o worker
+ * chama, ao montar a execução de um run (T10). Devolve o grafo NÃO compilado: quem
+ * compila é o worker, com o checkpointer da transação daquele tenant — o catálogo não
+ * sabe de tenant, banco ou checkpoint (D22, princípio §2).
+ */
+// `StateGraph<any>` sozinho não erasa `N` (nome de nó) — os demais genéricos ficam
+// presos ao default de cada agente. Só passando `any` nos dez parâmetros o tipo aceita
+// qualquer grafo concreto.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AgentGraphFactory = () => StateGraph<any, any, any, any, any, any, any, any, any, any>;
+
 export interface AgentDefinitionInput {
   readonly key: string;
   readonly version: string;
@@ -29,6 +42,7 @@ export interface AgentDefinitionInput {
   readonly configSchema: z.ZodType;
   readonly capabilities: readonly CapabilityRequirement[];
   readonly dataCollections: readonly DataCollection[];
+  readonly graph: AgentGraphFactory;
 }
 
 export interface AgentDefinition extends AgentDefinitionInput {
@@ -74,6 +88,12 @@ export function defineAgent(input: AgentDefinitionInput): AgentDefinition {
   if (input.capabilities.length === 0) {
     throw new InvalidDefinitionError(
       `Agente "${input.key}" não declara nenhuma capability. Um agente que não precisa de conector não precisa da plataforma.`
+    );
+  }
+
+  if (typeof input.graph !== "function") {
+    throw new InvalidDefinitionError(
+      `Agente "${input.key}" não declara grafo. Todo agente precisa de um grafo executável (GRA-01).`
     );
   }
 

@@ -1,8 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
+import { StateGraph, START, END } from "@langchain/langgraph";
 import { defineAgent, defineConnector } from "../src/define";
 import { secret } from "../src/secret";
 import { validateCatalog } from "../src/validate";
+
+function noopGraph() {
+  return new StateGraph(z.object({})).addNode("noop", async () => ({})).addEdge(START, "noop").addEdge("noop", END);
+}
 
 function agent(overrides: Partial<Parameters<typeof defineAgent>[0]> = {}) {
   return defineAgent({
@@ -13,6 +18,7 @@ function agent(overrides: Partial<Parameters<typeof defineAgent>[0]> = {}) {
     configSchema: z.object({ diaDeCorte: z.number().int() }),
     capabilities: [{ capability: "file-storage", required: true }],
     dataCollections: [],
+    graph: noopGraph,
     ...overrides
   });
 }
@@ -85,6 +91,16 @@ describe("validateCatalog", () => {
 
     expect(issues).toContainEqual(
       expect.objectContaining({ code: "UNSUPPORTED_FORM_SCHEMA", key: "accounting-routine" })
+    );
+  });
+
+  it("reporta agente sem grafo mesmo vindo de fonte que não passou por defineAgent", () => {
+    const semGrafo = { ...agent(), graph: undefined as unknown as () => never };
+
+    const issues = validateCatalog({ agents: [semGrafo], connectors: [connector()] });
+
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "AGENT_MISSING_GRAPH", key: "accounting-routine" })
     );
   });
 

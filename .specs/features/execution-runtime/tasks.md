@@ -242,10 +242,10 @@ T15, T18, T22, T24, T28 ──► T29
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
 **Done when:**
-- [ ] O grafo é declarado como fábrica preguiçosa — listar o catálogo não constrói grafo nenhum
-- [ ] O agente de exercício tem passos suficientes para provar checkpoint, aprovação e entrega
-- [ ] O catálogo continua válido na subida, e a validação recusa agente sem grafo
-- [ ] `apps/web` continua sem importar `@orquestra/catalog`
+- [x] O grafo é declarado como fábrica preguiçosa — listar o catálogo não constrói grafo nenhum
+- [x] O agente de exercício tem passos suficientes para provar checkpoint, aprovação e entrega
+- [x] O catálogo continua válido na subida, e a validação recusa agente sem grafo
+- [x] `apps/web` continua sem importar `@orquestra/catalog`
 
 ---
 

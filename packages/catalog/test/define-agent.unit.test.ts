@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
+import { StateGraph, START, END } from "@langchain/langgraph";
 import { defineAgent } from "../src/define";
+
+function noopGraph() {
+  return new StateGraph(z.object({})).addNode("noop", async () => ({})).addEdge(START, "noop").addEdge("noop", END);
+}
 
 const validInput = {
   key: "accounting-routine",
@@ -12,7 +17,8 @@ const validInput = {
     { capability: "file-storage", required: true },
     { capability: "messaging", required: false }
   ],
-  dataCollections: [{ key: "customers", schema: z.object({ nome: z.string() }) }]
+  dataCollections: [{ key: "customers", schema: z.object({ nome: z.string() }) }],
+  graph: noopGraph
 } as const;
 
 describe("defineAgent", () => {
@@ -67,6 +73,12 @@ describe("defineAgent", () => {
         ]
       })
     ).toThrowError(/customers/);
+  });
+
+  it("recusa agente que não declara grafo", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- só o resto do objeto importa aqui
+    const { graph: _graph, ...withoutGraph } = validInput;
+    expect(() => defineAgent(withoutGraph as unknown as typeof validInput)).toThrowError(/grafo/i);
   });
 
   it("erro de definição carrega código estável para o chamador tratar", () => {
