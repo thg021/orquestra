@@ -14,10 +14,13 @@ Vários escritórios usam o mesmo banco de dados. É o Postgres que impede um en
 
 ```
   M0  Fundação . . . . . . . . concluído em 06/09/2026
-  M1  Núcleo plugável . . . .  em andamento
-  M2  Runtime de execução
-  M3  Conectores reais
-  M4  Agente contábil (MVP)
+  M1  Núcleo plugável . . . .  concluído em 06/09/2026
+  M2  Runtime de execução . .  em andamento
+  M3  Carteira e automação
+  M4  Conectores reais
+  M5  Operações
+  M6  Acesso e equipe
+  M7  UC-001 no piloto (agente contábil)
 ```
 
 ---
@@ -47,7 +50,9 @@ Arquivos que mandam:
 
 | Arquivo | O que tem dentro |
 | --- | --- |
-| `.specs/project/ROADMAP.md` | os cinco milestones e o estado de cada um |
+| `.specs/project/ROADMAP.md` | os milestones e o estado de cada um |
+| `docs/prd/PRD-Orquestra-MVP-v1.0.md` | o produto do MVP: o que e por quê, sem tecnologia |
+| `.specs/project/PRD-MVP-GAP.md` | requisito por requisito do PRD: o que existe e o que falta |
 | `.specs/project/STATE.md` | decisões tomadas, riscos, lições aprendidas |
 | `.specs/features/<nome>/spec.md` | o que precisa existir e por quê |
 | `.specs/features/<nome>/design.md` | como vai ser construído |
@@ -113,7 +118,7 @@ Board da Asana: projeto **Orquestra**, workspace My Company.
 - `git push`, abrir PR, fazer merge
 - mexer em `.env` real ou em qualquer credencial de verdade
 - gerar ou manusear a chave mestra (KEK) real — isso é do Thiago, e ela nunca passa por uma conversa comigo
-- mudar uma decisão já registrada no `STATE.md` (D1 a D29)
+- mudar uma decisão já registrada no `STATE.md`
 - sair do escopo da task que estou fazendo
 
 ---

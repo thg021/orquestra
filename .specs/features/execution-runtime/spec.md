@@ -121,6 +121,21 @@ Três coisas aqui têm consequência maior que o resto:
 
 ---
 
+### P1: Acréscimos do PRD do MVP (2026-10-04) ⭐ MVP
+
+**Origem**: `docs/prd/PRD-Orquestra-MVP-v1.0.md`, comparado em `.specs/project/PRD-MVP-GAP.md`. Só entra aqui o que mexe no motor que o M2 já está construindo. Execução por cliente (CustomerRun) fica no M3.
+
+**Acceptance Criteria**:
+
+1. WHEN um run termina THEN o sistema SHALL distinguir `completed`, `partial_failure`, `failed` e `nothing_to_do`, e mostrar `delivering` enquanto entrega (PRD EXE-005, EXE-006, EXE-013)
+2. WHEN um aviso é emitido THEN o sistema SHALL guardá-lo separado do status — run com aviso pode ser `completed` (PRD EXE-007)
+3. WHEN um plano é aprovado THEN o sistema SHALL guardar uma cópia que o banco não deixa alterar (PRD EXE-010)
+4. WHEN o plano da retomada difere do plano aprovado THEN o sistema SHALL recusar a entrega e pedir nova aprovação (PRD EXE-016)
+5. WHEN a entrega de um item falha THEN o sistema SHALL tentar de novo sozinho até 3 vezes no ciclo, sem tocar item com recibo (PRD EXE-014, D67)
+6. WHEN um humano pede nova tentativa THEN o sistema SHALL tentar só os itens pendentes ou falhos, registrando quem pediu (PRD EXE-015)
+
+---
+
 ### P1: Leitura estruturada de documento ⭐ MVP
 
 **User Story**: Como escritório, quero que o sistema abra o PDF do cliente e extraia vencimento, CNPJ e nome, para conferir se o documento é o certo antes de mandá-lo.
@@ -244,6 +259,12 @@ Três coisas aqui têm consequência maior que o resto:
 | OBS-03 | P2: Histórico | D40 (resultado por item) | Pendente |
 | OBS-04 | P2: Histórico | M0/M1 (erro sanitizado) | Pendente |
 | OBS-05 | P2: Histórico | D7 (custo visível) | Pendente |
+| PRD-01 | P1: Acréscimos do PRD | PRD EXE-005/006/013, OQ-005 | Pendente |
+| PRD-02 | P1: Acréscimos do PRD | PRD EXE-007 | Pendente |
+| PRD-03 | P1: Acréscimos do PRD | PRD EXE-010 | Pendente |
+| PRD-04 | P1: Acréscimos do PRD | PRD EXE-016, OQ-003 | Pendente |
+| PRD-05 | P1: Acréscimos do PRD | PRD EXE-014, D67 | Pendente |
+| PRD-06 | P1: Acréscimos do PRD | PRD EXE-015 | Pendente |
 
 ---
 
@@ -258,7 +279,8 @@ O M2 está pronto quando:
 5. Um PDF vira dado estruturado conferível, e o custo da leitura aparece no run
 6. Um PDF com instrução embutida não altera o comportamento do sistema
 7. Um agendamento dispara uma vez por janela, e não dispara instância pausada
-8. `pnpm check` verde
+8. Um run com um canal falho termina `partial_failure`, tenta o canal falho até 3 vezes e nunca reenvia o que já tem recibo
+9. `pnpm check` verde
 
 ## Decisões tomadas nesta fase
 
@@ -268,3 +290,5 @@ O M2 está pronto quando:
 | D41 | CRUD do cadastro de clientes fica no M4 | STATE.md |
 | D42 | LLM é a forma de ler documento e está no caminho crítico | STATE.md |
 | D43 | PDF por texto, com visão como exceção | STATE.md |
+| D64 | Seleção em duas camadas: nome primeiro, conteúdo depois (revisa D42) | STATE.md |
+| D67 | Retry automático até 3 vezes por item no ciclo | STATE.md |

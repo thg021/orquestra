@@ -3,9 +3,9 @@
 **Design:** `.specs/features/execution-runtime/design.md`
 **Spec:** `.specs/features/execution-runtime/spec.md`
 **Testing:** `.specs/codebase/TESTING.md`
-**Status:** Em andamento — 10 de 29 tasks (T1 a T10 concluídas)
+**Status:** Em andamento — 13 de 35 tasks (T1 a T13 concluídas)
 
-29 tasks. Uma entrega por task, com teste co-locado.
+35 tasks (T30 a T35 vieram do PRD do MVP em 2026-10-04). Uma entrega por task, com teste co-locado.
 
 ---
 
@@ -72,10 +72,18 @@ T13 ──► T25 ──┬──► T26
 T23 ──────────┴──► T28
 ```
 
+### Fase 8b — Acréscimos do PRD do MVP
+
+```
+T13 ──► T30 ──► T31 ──► T32
+T18 ──► T33 ──► T34
+T30 ──► T35
+```
+
 ### Fase 9 — Fechamento
 
 ```
-T15, T18, T22, T24, T28 ──► T29
+T15, T18, T22, T24, T28, T32, T34, T35 ──► T29
 ```
 
 **Paralelizável:** as fases 5 e 6 não dependem uma da outra nem da fase 4 depois do T12. As fases 3 e 5 podem andar juntas depois do T3.
@@ -466,6 +474,8 @@ T15, T18, T22, T24, T28 ──► T29
 
 **Tools:** MCP: NENHUM · Skill: NENHUMA
 
+**Nota (D64, 2026-10-04):** a leitura por conteúdo é a segunda camada. O filtro por nome configurado na rotina roda antes e decide o que chega aqui; ele mora no M3, não nesta task.
+
 **Done when:**
 - [ ] A resposta é validada contra schema estrito: tipo, CNPJ, nome, vencimento e competência
 - [ ] Resposta fora do formato reprova aquele documento; a rodada segue com os demais
@@ -599,11 +609,106 @@ T15, T18, T22, T24, T28 ──► T29
 
 ---
 
+### T30: Status do run do PRD ⏸ espera OQ-005
+
+**What:** vocabulário final de status do run e as transições permitidas.
+**Where:** `packages/core/src/execution/`, `packages/db/src/repositories/service-runs.repository.ts`, migração
+**Depends on:** T13 · decisão OQ-005
+**Reuses:** `transitionServiceRunStatus` (T2)
+**Requirement:** PRD-01
+
+**Proposta (Figma):** `queued → running → awaiting_approval → delivering → completed | partial_failure | failed | nothing_to_do`
+
+**Done when:**
+- [ ] Transição inválida é recusada pela função, como já é hoje para estado final
+- [ ] Os quatro estados finais são finais: nenhum volta a `running`
+- [ ] Runs antigos em `succeeded` migram para `completed`
+- [ ] `nothing_to_do` não aparece como falha em nenhum lugar
+
+---
+
+### T31: Plano aprovado imutável
+
+**What:** guardar a cópia do plano aprovado de forma que ninguém altere depois.
+**Where:** `packages/db/src/schema/execution.ts`, migração, `approval.service.ts`
+**Depends on:** T30
+**Reuses:** `approval_requests` (T1)
+**Requirement:** PRD-03
+
+**Done when:**
+- [ ] Ao aprovar, grava o plano e um hash dele
+- [ ] `UPDATE` no plano ou no hash de pedido decidido é recusado pelo banco (trigger), não pela aplicação
+- [ ] O plano aprovado continua legível depois que o run termina
+
+---
+
+### T32: Plano mudou → nova aprovação ⏸ espera OQ-003
+
+**What:** na retomada, comparar o plano que vai ser entregue com o aprovado.
+**Where:** `apps/api/src/execution/`
+**Depends on:** T31, T14 · decisão OQ-003
+**Reuses:** hash da T31
+**Requirement:** PRD-04
+
+**Done when:**
+- [ ] Plano igual ao aprovado segue para a entrega
+- [ ] Plano diferente não entrega nada e abre novo pedido de aprovação
+- [ ] O motivo ("o plano mudou") fica registrado no run
+
+---
+
+### T33: Retry automático por item
+
+**What:** tentar de novo item falho até 3 vezes dentro do mesmo ciclo.
+**Where:** `apps/api/src/execution/delivery-executor.ts`
+**Depends on:** T18
+**Reuses:** recibos (T18)
+**Requirement:** PRD-05
+
+**Done when:**
+- [ ] Item que falha 2 vezes e passa na 3ª termina entregue, com 3 tentativas no histórico
+- [ ] Item que falha 3 vezes para e fica `failed`; o run termina `partial_failure` se outro item entregou
+- [ ] Item com recibo nunca entra no retry
+- [ ] Cada tentativa vira um registro próprio (Delivery Attempt), não sobrescreve a anterior
+
+---
+
+### T34: Nova tentativa manual
+
+**What:** endpoint para um humano pedir nova tentativa só do que falhou.
+**Where:** `apps/api/src/execution/runs.controller.ts`
+**Depends on:** T33
+**Reuses:** executor de entrega, fila (T4)
+**Requirement:** PRD-06
+
+**Done when:**
+- [ ] Só itens pendentes ou falhos são tentados; os entregues são pulados
+- [ ] Registra quem pediu e quando
+- [ ] Run sem item falho responde 409, sem efeito
+- [ ] Quem pode pedir segue a OQ-001; até lá, `owner`/`admin`
+
+---
+
+### T35: Aviso separado do status
+
+**What:** guardar avisos do run (ex.: documento esperado ausente) fora do status.
+**Where:** `packages/db/src/schema/execution.ts`, migração, repositório
+**Depends on:** T30
+**Reuses:** —
+**Requirement:** PRD-02
+
+**Done when:**
+- [ ] Tabela `run_warnings` com `tenant_id`, RLS e `FORCE ROW LEVEL SECURITY`
+- [ ] Run com aviso pode terminar `completed`
+- [ ] Aviso tem estado `open`; resolver e ignorar ficam para o M5 (Operações)
+
+---
+
 ### T29: Fechamento do milestone
 
 **What:** e2e do fluxo completo (disparar → ler documento → aprovar → entregar), atualização de ROADMAP e STATE.
 **Where:** `apps/web/test/`, `.specs/project/{ROADMAP.md,STATE.md}`, `README.md`
-**Depends on:** T15, T18, T22, T24, T28
+**Depends on:** T15, T18, T22, T24, T28, T32, T34, T35
 **Reuses:** —
 **Requirement:** todos os Success Criteria da spec
 

@@ -122,17 +122,95 @@
 - Custo da execução visível
 - Streaming de log ao vivo ficou fora do M2 (conforto, não requisito)
 
+**Acréscimos do PRD do MVP** — SPECIFIED (T30 a T35, 2026-10-04)
+
+- Status `delivering`, `completed`, `partial_failure`, `failed`, `nothing_to_do` (espera OQ-005)
+- Plano aprovado imutável; plano mudou → nova aprovação (espera OQ-003)
+- Retry automático até 3 vezes por item (D67) e nova tentativa manual só do que falhou
+- Aviso guardado separado do status
+
 ---
 
-## M3 — Conectores reais
+> **Reorganizado em 2026-10-04** a partir do PRD do MVP (`docs/prd/PRD-Orquestra-MVP-v1.0.md`).
+> Requisito por requisito: `.specs/project/PRD-MVP-GAP.md`. Decisões: D62 a D67.
+> Os antigos M3 (Conectores) e M4 (Agente contábil) viraram M4 e M7.
 
-**Goal:** As integrações que a rotina contábil exige existem e são testadas contra contrato.
+```
+  M2  Runtime de execução . . . .  atual
+  M3  Carteira e automação  . . .  cliente, público, canal, seleção de documento
+  M4  Conectores reais  . . . . .  arquivos, e-mail, WhatsApp, Fortes
+  M5  Operações . . . . . . . . .  caixa operacional e auditoria
+  M6  Acesso e equipe . . . . . .  convite, troca de escritório, senha
+  M7  UC-001 no piloto  . . . . .  distribuição mensal rodando de verdade
+```
+
+A ordem segue o "walking skeleton" do PRD (§20): primeiro o caminho de uma rotina de ponta a ponta, depois a operação em volta, depois a entrada de mais gente. O piloto usa um escritório criado por CLI até o M6.
+
+---
+
+## M3 — Carteira e automação
+
+**Goal:** O escritório cadastra seus clientes e configura uma rotina dizendo para quem ela roda, por qual canal e quais documentos ela procura.
+**PRD:** CUS-001 a 006, AUT-002 a 012, SRV-008, EXE-002, EXE-003
 
 ### Features
 
+**Carteira de clientes** — PLANNED (D63)
+
+- `customers` próprio do tenant: CNPJ, estado `ACTIVE`/`INACTIVE`
+- Vários contatos por cliente, com canal (vocabulário da D32)
+- Grupos de clientes
+- Modelo pronto para CPF, sem tela (CUS-005)
+- Tela: Figma "Carteira de clientes — estados (v2)"
+
+**Público da rotina** — PLANNED
+
+- Audiência `ALL_ACTIVE` ou `SELECTED`
+- `Enrollment` por cliente: `PENDING`, `READY`, `PAUSED`, `BLOCKED`
+- Cliente `INACTIVE` não entra em execução nova
+
+**Canal e provider por rotina** — PLANNED (D65)
+
+- Default por capability na instância, override por cliente no `Enrollment`
+- Depende da decisão C4 (uma ou várias conexões por conector)
+
+**Seleção de documento** — PLANNED (D64)
+
+- Regras por nome: `startsWith`, `contains`, `endsWith`, `equals` + extensão; sem regex
+- Documentos esperados: ausência vira aviso (T35), não bloqueio
+- Identidade do documento entre ciclos — espera OQ-002
+
+**Prontidão e ciclo de vida** — PLANNED
+
+- Gate de ativação do M1 passa a olhar também público e dados do cliente
+- Estados `DRAFT`, `ACTIVE`, `PAUSED`, `ARCHIVED` (mapear sobre os de hoje)
+- Tela: Figma "Configuração de automação — rascunho e prontidão (v2)"
+
+**Execução por cliente** — PLANNED
+
+- `CustomerRun` filho do `ServiceRun`: um por cliente elegível
+- Falha de um cliente não para os outros
+- Status do run agrega o dos clientes
+- Delivery Package: um e-mail com vários anexos por cliente
+
+---
+
+## M4 — Conectores reais
+
+**Goal:** As integrações que a rotina contábil exige existem e são testadas contra contrato.
+**PRD:** SRV-006, SRV-007, OQ-004
+
+### Features
+
+**Capability declara efeito externo** — PLANNED
+
+- Campo `sideEffect` na capability do catálogo (SRV-006)
+- Pré-checagem (health) real por conector, no lugar do `unverified` do M1
+- Tela: Figma "Serviço — conexão e pré-checagem (v2)"
+
 **Entrada de arquivos (capability `file-storage`)** — PLANNED
 
-- `platform-upload` — storage da própria plataforma; é o adapter de menor risco, então vem primeiro e destrava o M4
+- `platform-upload` — storage da própria plataforma; é o adapter de menor risco, então vem primeiro
 - `onedrive` — Microsoft Graph API (caminho preferido do tenant piloto)
 - `google-drive` — via adapter MCP; valida também o caminho genérico de MCP
 
@@ -150,9 +228,67 @@
 
 ---
 
-## M4 — Agente contábil (MVP)
+## M5 — Operações
 
-**Goal:** O tenant piloto opera pela plataforma. A skill avulsa é aposentada.
+**Goal:** Tudo que precisa de uma pessoa aparece num lugar só e fica lá até alguém tratar.
+**PRD:** OPS-001 a 007, SRV-009, EXE-018, §13 Auditoria
+
+### Features
+
+**Caixa operacional** — PLANNED
+
+- Quatro filas: aprovações, avisos, falhas, problemas de configuração
+- Aviso fica até `resolved` ou `ignored`; falha até retry bom ou encerramento; problema de configuração até ser corrigido
+- Cada item leva ao run ou cliente que o gerou
+- Substitui a fila de aprovações da T27 (que vira uma das quatro filas)
+- Tela: Figma "Caixa operacional — filas e inspeção contextual (v2)"
+
+**Reenvio explícito** — PLANNED (D67)
+
+- Reenviar item já entregue: ação separada do retry, com motivo e autor
+
+**Auditoria funcional** — PLANNED
+
+- Trilha de quem fez o quê em cliente, rotina, aprovação, entrega e caixa
+- Quem pode cada ação segue a OQ-001
+
+---
+
+## M6 — Acesso e equipe
+
+**Goal:** Pessoas entram por convite, trabalham em mais de um escritório e perdem acesso quando devem.
+**PRD:** IAM-001 a 008
+
+### Features
+
+**Convite** — PLANNED (risco R7: envio de e-mail da plataforma)
+
+- Convite por e-mail com papel; aceite cria a membership
+- Primeiro admin do escritório entra por convite
+- Convite expira; validade, reenvio e revogação ainda TBD no Figma
+- Tela: Figma "Equipe — convites e papéis (v2)"
+
+**Vários escritórios** — PLANNED
+
+- Trocar o escritório ativo sem novo login
+- Telas já desenhadas: "Pós-login 01 a 04" (escolher, sem escritório, seletor)
+
+**Fim de acesso** — PLANNED
+
+- Escritório desativado, membership removida ou convite expirado: sem acesso, sessão aberta inclusive
+- Auditoria de entrada, saída e troca de papel (IAM-008)
+
+**Senha e cadastro** — PLANNED
+
+- Recuperar senha por e-mail (telas "Recuperar senha 01 a 05" no Figma)
+- Criação de escritório por autoatendimento (IAM-001)
+
+---
+
+## M7 — UC-001 no piloto
+
+**Goal:** O escritório piloto distribui DAS, DARF e FGTS todo mês pela plataforma. A skill avulsa é aposentada.
+**PRD:** §12 UC-001
 
 ### Features
 
@@ -160,7 +296,6 @@
 
 - Resolução dos documentos exigidos por categoria de cliente
 - Validação de conteúdo (competência, CNPJ) como função pura
-- Idempotência de envio (`send_receipts`)
 
 **Grafo `accounting-routine`** — PLANNED
 
@@ -170,7 +305,7 @@
 
 **Migração de dados** — PLANNED
 
-- `clientes.yaml` para a collection `customers`
+- `clientes.yaml` para a tabela `customers` (D63)
 - Schedules dos dias 01, 02, 05, 07 e 10
 
 ---
@@ -179,6 +314,6 @@
 
 - Chat com agentes (spec próprio)
 - Billing e limites de gasto por tenant, sobre a contabilidade já coletada
-- Segundo tenant real e onboarding self-service
+- Segundo tenant real
 - Catálogo de conectores MCP dirigido por manifesto, sem deploy
 - Banco dedicado por tenant para planos com exigência de isolamento físico
